@@ -374,7 +374,6 @@ public class UserController {
 		TeamMember teamMember = teamMemberServiceImpl.findByKeys(fieldValues, TeamMember.class);
 		if (teamMember != null) {
 			
-			//System.out.println(teamMember.toString());
 			//model.addAttribute("id", id);
 			teamMember.setPerson(account);
 			model.addAttribute("teamMember", teamMember);
@@ -428,7 +427,35 @@ public class UserController {
 	                             @RequestParam(value = "locationList[]", required = false) int[] locations,
 	                             @Valid @ModelAttribute("account") User account, BindingResult binding, ModelMap model,
 	                             HttpSession session, @PathVariable("id") int id, Locale locale) throws Exception {
-		
+		String errorMessage = "";
+		session.setAttribute("errorMessageForSK", errorMessage);
+//		if (roles[0].equals(Roles.AM.getId().toString())){
+//			User updateAbleUser = userServiceImpl.findById(id, "id", User.class);
+//			List<Branch> existingBranch = new ArrayList<>(updateAbleUser.getBranches());
+//			for (Branch b: existingBranch) {
+//				Integer branchId = b.getId();
+//				boolean flag = false;
+//				for (int i = 0; i < branches.length; i++) {
+//					System.out.println(branchId + " : " +branches[i]);
+//					if (branchId.equals(Integer.valueOf(branches[i]))) {
+//						flag = true;
+//						break;
+//					}
+//				}
+//				if (flag == false) {
+//					List<Object[]> branchesCheck = databaseServiceImpl.getSKByBranch(branchId.toString());
+//					if (branchesCheck.size() > 0) {
+//						errorMessage = "You have to remove SK from "+ b.getName() + " Branch to continue";
+//						session.setAttribute("errorMessageForSK", errorMessage);
+//						System.out.println("ID: "+ id);
+//						return new ModelAndView("redirect:/user/"+id+"/edit.html?lang=" + locale);
+//					}
+//				} else {
+//					errorMessage = "";
+//					session.setAttribute("errorMessageForSK", errorMessage);
+//				}
+//			}
+//		}
 		account.setRoles(userServiceImpl.setRoles(roles));
 		account.setBranches(userServiceImpl.setBranches(branches));
 		String ssPrefix = "";
@@ -584,8 +611,16 @@ public class UserController {
 	//	}
 	
 	@RequestMapping(value = "/login", method = RequestMethod.GET)
-	public synchronized String loginPage() {
+	public String loginPage() {
 		return "user/login";
+	}
+
+	@RequestMapping(value = "/session-expired", method = RequestMethod.GET)
+	public ModelAndView sessionExpired(ModelAndView modelAndView) {
+
+		modelAndView.setViewName("user/login");
+		modelAndView.addObject("sessionExpiredMsg", "Your session has expired, please login again to continue");
+		return modelAndView;
 	}
 	
 	@PostAuthorize("hasPermission(returnObject, 'PERM_USER_HIERARCHY')")
@@ -691,7 +726,6 @@ public class UserController {
 		session.setAttribute("user", user);
 		session.setAttribute("assignedLocation", userAssignedLocationDTOS);
 		session.setAttribute("roleId", roleId);
-		System.out.println("EVERYTHING IS OKAY");
 		return "user/catchment-area";
 	}
 	
@@ -705,7 +739,6 @@ public class UserController {
 		JSONArray array = new JSONArray();
 		try {
 			array = locationServiceImpl.convertLocationTreeToJSON(treeDTOS, user.getEnableSimPrint());
-			System.out.println(array);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -730,7 +763,6 @@ public class UserController {
 		
 		String rootPath = request.getSession().getServletContext().getRealPath("/");
 		
-		System.out.println("Root Path:-> " + rootPath);
 		File dir = new File(rootPath + File.separator + "uploadedfile");
 		if (!dir.exists()) {
 			dir.mkdirs();
@@ -846,8 +878,7 @@ public class UserController {
 		List<UserDTO> users = userServiceImpl.getChildUserFromParent(skId, "SS");
 		List<UserDTO> ssWithoutCatchment = userServiceImpl.getSSWithoutCatchmentArea(skId);
 		User skOfSS = userServiceImpl.findById(skId, "id", User.class);
-		System.out.println("sk first name: "+skOfSS.getFirstName());
-		System.out.println("sk last name: "+skOfSS.getLastName());
+
 		model.addAttribute("skUsername", skUsername);
 		model.addAttribute("skFullName", skOfSS.getFullName());
 		model.addAttribute("branches", branches);
@@ -945,7 +976,6 @@ public class UserController {
 		if (user.getRoles() != null) account.setRoles(user.getRoles());
 		//account.setPassword("");
 		String redirectUrl = "redirect:/user/" + skId + "/" + skUsername + "/my-ss.html";
-		System.out.println(account.toString());
 		userServiceImpl.update(account);
 		return new ModelAndView(redirectUrl + "?lang=" + locale);
 		//return new ModelAndView("redirect:/user.html?lang=" + locale);

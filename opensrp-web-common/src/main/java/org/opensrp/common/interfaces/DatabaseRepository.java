@@ -110,7 +110,7 @@ public interface DatabaseRepository {
 
 	public <T> boolean entityExistsNotEqualThisId(int id, T value, String fieldName, Class<?> className);
 
-	public <T> boolean isLocationExists(int parentId, String name, Class<?> className);
+	public <T> boolean isLocationExists(int parentId, String name, String code, Class<?> className);
 
 	public <T> List<T> findAllByKey(String value, String fieldName, Class<?> className);
 
@@ -183,7 +183,7 @@ public interface DatabaseRepository {
 
 	public Integer getClientInfoFilterCount(String startTime, String endTime, String formName, String sk, List<Object[]> allSKs);
 
-	List<Object[]> getExportByCreator(String username);
+	List<Object[]> getExportByCreator(String username, String formName);
 
 	public List<Object[]> getUserListByFilterString(int locationId, int locationTagId, int roleId, int branchId, String name, int limit, int offset, String orderColumn, String orderDirection);
 
@@ -215,5 +215,25 @@ public interface DatabaseRepository {
 
 	public <T> T getLocationCount(String name);
 
+	public <T> List<T> getCOVID19Report(String startDate, String endDate, String query, Integer offset, Integer limit);
+
+	public <T> T getCOVID19ReportCount(String query);
+
+	public <T> List<T> getCOVID19ReportBySK(String startDate, String endDate, String query, Integer offset, Integer limit);
+
 	public <T> List<T> getElcoReport(String startDate, String endDate, String query);
+
+	public <T> List<T> getAggregatedReport(String startDate, String endDate, String query);
+
+	public <T> List<T> getAggregatedBiometricReport(String startDate, String endDate, String query);
+
+	public <T> List<T> getIndividualBiometricReport(String startDate, String endDate, String query);
+
+	public <T> List<T> getPregnancyReport(String startDate, String endDate, String query);
+
+	public <T> List<T> getChildNutritionReport(String startDate, String endDate, String query);
+
+	<T> List<T> getForumReport(String startDate, String endDate, String query);
+
+	<T> List<T> getForumIndividualReport(String startDate, String endDate, String query);
 }

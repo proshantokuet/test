@@ -6,9 +6,11 @@ import org.opensrp.core.entity.Branch;
 import org.opensrp.core.entity.Role;
 import org.opensrp.core.entity.User;
 import org.opensrp.core.service.BranchService;
+import org.opensrp.core.service.LocationService;
 import org.opensrp.core.service.UserService;
 import org.opensrp.core.service.mapper.BranchMapper;
 import org.opensrp.web.util.AuthenticationManagerUtil;
+import org.opensrp.web.util.SearchUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.stereotype.Controller;
@@ -29,6 +31,9 @@ import static org.springframework.http.HttpStatus.OK;
 public class BranchController {
 
     @Autowired
+    private LocationService locationServiceImpl;
+
+    @Autowired
     private BranchService branchService;
 
     @Autowired
@@ -39,6 +44,9 @@ public class BranchController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private SearchUtil searchUtil;
 
     @PostAuthorize("hasPermission(returnObject, 'PERM_READ_BRANCH_LIST')")
     @RequestMapping(value = "/branch-list.html", method = RequestMethod.GET)
@@ -52,19 +60,24 @@ public class BranchController {
 
     @PostAuthorize("hasPermission(returnObject, 'PERM_READ_BRANCH_LIST')")
     @RequestMapping(value = "/branch/add.html", method = RequestMethod.GET)
-    public String addBranch(Model model, Locale locale) {
+    public String addBranch(Model model, Locale locale, HttpSession session) {
         model.addAttribute("locale", locale);
         model.addAttribute("branch", new Branch());
+        searchUtil.setDivisionAttribute(session);
         return "branch/add";
     }
 
     @PostAuthorize("hasPermission(returnObject, 'PERM_READ_BRANCH_LIST')")
     @RequestMapping(value = "/branch/edit.html", method = RequestMethod.GET)
-    public String processUpdate(@RequestParam("id") int id, Model model, Locale locale) {
+    public String processUpdate(@RequestParam("id") int id, Model model, Locale locale, HttpSession session) {
         Branch branch = branchService.findById(id, "id", Branch.class);
         model.addAttribute("locale", locale);
         model.addAttribute("branch", new Branch());
-        model.addAttribute("branchDTO", branchMapper.map(branch));
+        session.setAttribute("branchDTO", branchMapper.map(branch));
+        searchUtil.setDivisionAttribute(session);
+
+        session.setAttribute("districtList", branch.getDivision() == null ? new ArrayList<>() : locationServiceImpl.getChildData(branch.getDivision()));
+        session.setAttribute("upazilaList", branch.getDistrict() == null ? new ArrayList<>() : locationServiceImpl.getChildData(branch.getDistrict()));
         return "branch/edit";
     }
 

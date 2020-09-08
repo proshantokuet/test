@@ -12,6 +12,7 @@ import javax.servlet.http.HttpSession;
 
 import com.google.gson.Gson;
 import org.apache.commons.lang.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opensrp.common.dto.LocationDTO;
@@ -98,19 +99,16 @@ public class LocationRestController {
 
 	@RequestMapping(value = "/save", method = RequestMethod.POST)
 	public ResponseEntity<String> saveLocation(HttpSession session, ModelMap model, @RequestBody LocationDTO locationDTO) throws Exception {
-		System.out.println(locationDTO.toString());
 		Location location = locationMapper.map(locationDTO);
 		try {
 			if (!locationServiceImpl.locationExists(location)) {
 				locationServiceImpl.saveToOpenSRP(location);
-				System.out.println("LOCATION NOT EXIST");
 			} else {
 				String errorMessage = "Specified location already exists, please specify another";
 				return new ResponseEntity<> (new Gson().toJson(errorMessage), OK);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("IN EXCEPTION");
 			return new ResponseEntity<> (new Gson().toJson(e.getMessage()), OK);
 		}
 		return new ResponseEntity<>(new Gson().toJson(""), OK);
@@ -121,7 +119,7 @@ public class LocationRestController {
 		return null;
 	}
 
-	@RequestMapping(value = "/list-ajax")
+	@RequestMapping(value = "/list-ajax", method = RequestMethod.GET)
 	public ResponseEntity<String> getLocationPagination(HttpServletRequest request) throws JSONException {
 		Integer draw = Integer.valueOf(request.getParameter("draw"));
 		String name = request.getParameter("search[value]");

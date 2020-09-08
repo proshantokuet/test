@@ -25,11 +25,11 @@
 </head>
 <body>
 
-<table class="display" id="formWiseAggregatedListTable"
+<table class="display table table-bordered table-striped" id="formWiseAggregatedListTable"
        style="width: 100%;">
     <thead>
     <tr> <!--1st-->
-        <th rowspan="4">Location/Provider Name</th>
+        <th rowspan="4">Location/SK</th>
         <th rowspan="3" colspan="3">Number of ELCOs</th>
         <th colspan="20">Family Planning methods user (including adolescent ELCOs)</th>
         <th colspan="20">Family Planning methods user (Only adolescents ELCOs)</th>

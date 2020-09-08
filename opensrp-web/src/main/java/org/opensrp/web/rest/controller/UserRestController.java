@@ -125,9 +125,6 @@ public class UserRestController {
 			}
 			boolean isExists = userServiceImpl.isUserExist(user.getUsername());
 			if (!isExists) {
-				System.out.println("BEFORE SAVE:");
-				System.out.println(user);
-				System.out.println(userDTO);
 				User createdUser = userServiceImpl.saveNew(user, false);
 				userNameUniqueError = "";
 			}
@@ -261,6 +258,8 @@ public class UserRestController {
 	public ResponseEntity<String> catchmentArea(Model model, HttpSession session, @PathVariable("id") int id, Locale locale)
 			throws JSONException {
 
+		System.out.println("::LOAD CATCHMENT AREA::");
+
 		String role = "Admin";
 		if (AuthenticationManagerUtil.isAM())
 			role = "AM";
@@ -281,7 +280,8 @@ public class UserRestController {
 		User loggedInUser = AuthenticationManagerUtil.getLoggedInUser();
 		Integer userLocationId = 0;
 		if (user.getParentUser() != null) {
-			userLocationId = user.getParentUser().getId();
+			if (role.equals(Roles.AM.getName()) && roleId.equals(Roles.SS.getId())) userLocationId = user.getParentUser().getId();
+			if (!role.equals(Roles.AM.getName())) userLocationId = user.getParentUser().getId();
 		}
 		JSONArray locationTree = locationService.getLocationWithDisableFacility(session, parentIndication, parentKey,
 				userAssignedLocationDTOS, id, role, userLocationId!=0?userLocationId:loggedInUser.getId(), roleId);
@@ -339,7 +339,6 @@ public class UserRestController {
 			}
 
 			int response = usersCatchmentAreaService.deleteCatchmentAreas(catchmentAreaIds);
-			System.out.println("is deleted: "+response);
 		} catch (Exception e) {
 			e.printStackTrace();
 			responseMessage = e.getMessage();
@@ -361,7 +360,6 @@ public class UserRestController {
 			}
 
 			int response = usersCatchmentAreaService.deleteCatchmentAreas(catchmentAreaIds);
-			System.out.println("is deleted: "+response);
 		} catch (Exception e) {
 			e.printStackTrace();
 			responseMessage = e.getMessage();
@@ -383,7 +381,6 @@ public class UserRestController {
 			}
 
 			int response = usersCatchmentAreaService.deleteCatchmentAreas(catchmentAreaIds);
-			System.out.println("is deleted: "+response);
 		} catch (Exception e) {
 			e.printStackTrace();
 			responseMessage = e.getMessage();
@@ -465,7 +462,12 @@ public class UserRestController {
 		boolean editPermitted = AuthenticationManagerUtil.isPermitted("PERM_UPDATE_USER");
 
 		List<Object[]> usersWithoutCatchmentArea = userServiceImpl.getUserListWithoutCatchmentArea(roleId, branchId, name, length, start, orderColumn, orderDirection);
-		Integer totalUserWithoutCatchmentArea = userServiceImpl.getUserListWithoutCatchmentAreaCount(roleId, branchId, name);
+		Integer totalUserWithoutCatchmentArea = 0;
+		if(start > 0) {
+			totalUserWithoutCatchmentArea = Integer.valueOf(request.getParameter("userCountWithoutCatchmentArea"));
+		} else {
+			totalUserWithoutCatchmentArea = userServiceImpl.getUserListWithoutCatchmentAreaCount(roleId, branchId, name);
+		}
 		JSONObject response = userServiceImpl.getUserDataOfDataTable(draw, totalUserWithoutCatchmentArea, usersWithoutCatchmentArea, editPermitted);
 		return new ResponseEntity<>(response.toString(), OK);
 	}
@@ -487,7 +489,12 @@ public class UserRestController {
 		boolean editPermitted = AuthenticationManagerUtil.isPermitted("PERM_UPDATE_USER");
 
 		List<Object[]> usersWithCatchmentArea = userServiceImpl.getUserListByFilterString(locationId, villageTagId, roleId, branchId, name, length, start, orderColumn, orderDirection);
-		Integer totalUserWithCatchmentArea = userServiceImpl.getUserListByFilterStringCount(locationId, villageTagId, roleId, branchId, name, length, start);
+		Integer totalUserWithCatchmentArea = 0;
+		if(start > 0 ) {
+			totalUserWithCatchmentArea = Integer.valueOf(request.getParameter("userCount"));
+		} else {
+			totalUserWithCatchmentArea = userServiceImpl.getUserListByFilterStringCount(locationId, villageTagId, roleId, branchId, name, length, start);
+		}
 		JSONObject response = userServiceImpl.getUserDataOfDataTable(draw, totalUserWithCatchmentArea, usersWithCatchmentArea, editPermitted);
 		return new ResponseEntity<>(response.toString(), OK);
 	}

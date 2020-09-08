@@ -20,44 +20,34 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<title><spring:message code="lbl.pregnancyReport"/></title>
+<jsp:include page="/WEB-INF/views/header.jsp" />
 
-    <meta http-equiv="refresh"
-          content="<%=session.getMaxInactiveInterval()%>;url=/login" />
-
-    <title>Pregnancy Report</title>
-
-    <jsp:include page="/WEB-INF/views/css.jsp" />
-
-    <style>
-        th, td {
-            text-align: center;
-        }
-        .elco-number {
-            width: 30px;
-        }
-    </style>
-</head>
+<style>
+    th, td {
+        text-align: center;
+    }
+    .elco-number {
+        width: 30px;
+    }
+</style>
 
 
-<body class="fixed-nav sticky-footer bg-dark" id="page-top">
-<jsp:include page="/WEB-INF/views/navbar.jsp" />
-<div class="content-wrapper">
-    <div class="container-fluid">
+
+<div class="page-content-wrapper">
+    <div class="page-content">
         <jsp:include page="/WEB-INF/views/report-search-panel.jsp" />
         <div id="loading" style="display: none;position: absolute; z-index: 1000;margin-left:45%">
             <img width="50px" height="50px" src="<c:url value="/resources/images/ajax-loading.gif"/>">
         </div>
-        <div class="card mb-3">
-            <div class="card-header">
-                <i class="fa fa-table"></i>
-                <spring:message code="lbl.summaryStatus"/>
+
+        <div class="portlet box blue-madison">
+            <div class="portlet-title">
+                <div class="caption">
+                    <i class="fa fa-list"></i><spring:message code="lbl.pregnancyReport"/>
+                </div>
             </div>
-            <div class="card-body">
+            <div class="portlet-body">
                 <div class="row" style="margin-bottom: 10px;">
                     <div class="col-sm-2" id="startDate">
                         <b>START DATE: </b> <span><%=startDate%></span>
@@ -69,69 +59,31 @@
                     <div class="col-sm-2" id="districtS"></div>
                     <div class="col-sm-4" id="upazilaS"></div>
                 </div>
-                <div class="row">
+
+                <div class="row" style="margin: 0px">
                     <div class="col-sm-12" id="content" style="overflow-x: auto;">
-                        <table class="display" id="formWiseAggregatedListTable"
-                               style="width: 100%;">
-                            <thead>
-                            <tr> <!--1st row-->
-                               <th colspan="20">Pregnancy Related Information</th>
-                            </tr>
-                            <tr> <!--2nd row-->
-                                <th rowspan="3">Total no. of pregnant women</th>
-                                <th rowspan="3">No. Of Adolescents pregnant girls (10-19 years)</th>
-                                <th colspan="2">No. Of new pregnant women identified in current month</th>
-                                <th rowspan="3">No of total pregnant women (Old + New)</th>
-                                <th colspan="6">Delivery Information (No.)</th>
-                                <th colspan="2">No. Of ANCs given</th>
-                                <th rowspan="3">No. Of  TT  protected mothers</th>
-                                <th colspan="2" rowspan="2">No. Of PNC visits within 48 hours</th>
-                                <th rowspan="3">No. Of mothers completed 42 days after delivery</th>
-                                <th colspan="2">Post natal care (PNC)</th>
-                                <th rowspan="3">No. of referred cases with Pregnancy related complications</th>
-                            </tr>
-                            <tr> <!--3rd row-->
-                                <th rowspan="2">Within 1st three month (Ist trimester)</th>
-                                <th rowspan="2">After 1st three month</th>
-
-                                <th colspan="2">Institutionalized</th>
-                                <th colspan="3">Delivery at Home</th>
-                                <th rowspan="2">Total no.of deliveries</th>
-
-                                <th rowspan="2">1-3</th>
-                                <th rowspan="2">4-4+</th>
-
-                                <th rowspan="2">1-2</th>
-                                <th rowspan="2">3-3+</th>
-                            </tr>
-                            <tr> <!--4th row-->
-                                <th>Normal</th>
-                                <th>Cesarean</th>
-
-                                <th>BRAC CSBA</th>
-                                <th>Doctor/nurse/FWV/CSBA/SACMO</th>
-                                <th>TBA/others</th>
-
-                                <th>SK</th>
-                                <th>Others</th>
-                            </tr>
-                            </thead>
-                            <tbody id="t-body">
-                            </tbody>
-                        </table>
+                        <div id="pregnancy-report"></div>
                     </div>
                 </div>
             </div>
             <div class="card-footer small text-muted"></div>
         </div>
+        <jsp:include page="/WEB-INF/views/footer.jsp" />
     </div>
-
-    <jsp:include page="/WEB-INF/views/footer.jsp" />
 </div>
 <script src="<c:url value='/resources/js/datepicker.js' />"></script>
-<script src="<c:url value='/resources/js/jquery-3.3.1.js' />"></script>
 <script src="<c:url value='/resources/js/jquery-ui.js' />"></script>
 <script>
+    jQuery(document).ready(function() {
+        Metronic.init(); // init metronic core components
+        Layout.init(); // init current layout
+        //TableAdvanced.init();
+    });
+    $(document).ready(function() {
+        $("#searched_value").val('BANGLADESH');
+        generatePregnancyReport();
+    });
+
     function onSearchClicked() {
         let flagS = true;
         let flagE = true;
@@ -156,15 +108,15 @@
         $("#divisionS").html("");
         $("#districtS").html("");
         $("#upazilaS").html("");
-        var branch = $("#branchaggregate").val();
-        var division = $("#division").val();
-        var district = $("#district").val();
-        var upazila = $("#upazila").val();
-        var location = $("#locationoptions").val();
+        let branch = $("#branchaggregate").val();
+        let division = $("#division").val();
+        let district = $("#district").val();
+        let upazila = $("#upazila").val();
+        let location = $("#locationoptions").val();
 
-        var divisionA = division == null?division:division.split("?")[1];
-        var districtA = district == null?district:district.split("?")[1];
-        var upazilaA = upazila == null?upazila:upazila.split("?")[1];
+        let divisionA = division == null?division:division.split("?")[1];
+        let districtA = district == null?district:district.split("?")[1];
+        let upazilaA = upazila == null?upazila:upazila.split("?")[1];
 
         $("#startDate").append("<b>START DATE: </b> <span>"+ $("#start").val()+"</span>");
         $("#endDate").append("<b>END DATE: </b> <span>"+ $("#end").val()+"</span>");
@@ -180,9 +132,10 @@
             }
         }
 
-        var url = "/opensrp-dashboard/report/aggregated";
-        $("#t-body").html("");
+        $("#pregnancy-report").html("");
+
         let searchedValueId = $('#searched_value_id').val();
+
         if (searchedValueId == 0) {
             if ($('#division').val() != null && $('#division').val() != undefined && $('#division').val() != '') {
                 let divInfo = $('#division').val().split("?");
@@ -206,6 +159,11 @@
                 }
             }
         }
+        generatePregnancyReport();
+    }
+
+    function generatePregnancyReport() {
+        let url = "/opensrp-dashboard/report/pregnancy-report";
         $.ajax({
             type : "GET",
             contentType : "application/json",
@@ -227,21 +185,18 @@
             },
             success : function(data) {
                 $('#loading').hide();
-                $("#t-body").html(data);
+                $("#pregnancy-report").html(data);
                 $('#search-button').attr("disabled", false);
             },
             error : function(e) {
-                display(e);
                 $('#loading').hide();
                 $('#search-button').attr("disabled", false);
             },
-            done : function(e) {
+            complete : function(e) {
                 $('#loading').hide();
                 $('#search-button').attr("disabled", false);
-                //enableSearchButton(true);
             }
         });
     }
 </script>
-</body>
 </html>

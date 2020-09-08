@@ -1,16 +1,10 @@
 package org.opensrp.common.repository.impl;
 
 import java.math.BigInteger;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateUtils;
 import org.apache.log4j.Logger;
-import org.castor.util.StringUtil;
-import org.dom4j.Branch;
-import org.exolab.castor.types.DateTime;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -19,25 +13,15 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.*;
-import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.AliasToBeanResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 import org.opensrp.common.dto.*;
 import org.opensrp.common.interfaces.DatabaseRepository;
 import org.opensrp.common.service.impl.DatabaseServiceImpl;
-import org.opensrp.common.util.DateUtil;
-import org.opensrp.common.util.LocationTags;
-import org.opensrp.common.util.Roles;
-import org.opensrp.common.util.SearchBuilder;
+import org.opensrp.common.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Repository;
-import javax.servlet.http.HttpSession;
-import javax.transaction.Transactional;
-import javax.xml.transform.Transformer;
-
-import static org.apache.commons.lang3.time.DateUtils.parseDate;
 
 /**
  * <p>
@@ -110,15 +94,12 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 
 	@Override
 	public <T> long saveAll(List<T> t) throws Exception {
-		System.out.println("SAVE ALL");
 		Session session = sessionFactory.openSession();
 		Transaction tx = null;
 		long returnValue = 0;
 		try {
 			tx = session.beginTransaction();
-			System.out.println("Save.... "+ t.size());
 			for (int i = 0; i < t.size(); i++) {
-				System.out.println(""+t.toString());
 				session.saveOrUpdate(t.get(i));
 			}
 			logger.info("saved successfully: " + t.getClass().getName());
@@ -180,7 +161,6 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 	public <T> boolean delete(T t) {
 		Session session = sessionFactory.openSession();
 		Transaction tx = null;
-		System.out.println("DELETE METHOD A ASHCHHE");
 		boolean returnValue = false;
 		try {
 			tx = session.beginTransaction();
@@ -460,7 +440,6 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 		try {
 			Criteria criteria = session.createCriteria(className);
 			for (Map.Entry<String, Object> entry : fieldValues.entrySet()) {
-				System.out.println(entry.getKey() + " in repo " + entry.getValue());
 				criteria.add(Restrictions.eq(entry.getKey(), entry.getValue()));
 				criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 			}
@@ -611,14 +590,15 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 	}
 
 	@Override
-	public <T> boolean isLocationExists(int parentLocationId, String name, Class<?> className) {
+	public <T> boolean isLocationExists(int parentLocationId, String name, String code, Class<?> className) {
 		List<Object> result = new ArrayList<Object>();
 		Session session = sessionFactory.openSession();
 		try {
-			String hql = "select * from core.location where (name = :name or name = :nameWithParentId) and parent_location_id = "+parentLocationId+";";
+			String hql = "select * from core.location where (name = :name or name = :nameWithParentId or code = :code) and parent_location_id = "+parentLocationId+";";
 			Query query = session.createSQLQuery(hql)
 					.setString("name", name)
-					.setString("nameWithParentId", name+":"+parentLocationId);
+					.setString("nameWithParentId", name+":"+parentLocationId)
+					.setString("code", code);
 			result = query.list();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1225,8 +1205,6 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 		if(!"empty".equalsIgnoreCase(searched_value)) {
 			conditionString += " and "+searched_value;
 		}
-		System.out.println("Size:"+ allSKs.size());
-		System.out.println(filterString + " " + searched_value);
 		if (allSKs.size() != 0) {
 			String providerIds = "";
 			int size = allSKs.size();
@@ -1241,7 +1219,6 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 			}
 		}
 
-		System.out.println("conditionstring"+ conditionString);
 		System.err.println("Location Id: "+ searchedValueId);
 
 		List<Object[]> mhvList = null;
@@ -1350,7 +1327,6 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 			Query query = session.createSQLQuery(hql)
 					.setString("startDate", startDate)
 					.setString("endDate", endDate);
-			System.out.println("Query"+ hql);
 			mhvList = query.list();
 		} catch (Exception e) {
 			logger.error(e);
@@ -1393,7 +1369,7 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 		Session session = sessionFactory.openSession();
 		List<Object[]> allSK = null;
 		String additionalQuery = "";
-		if (branches != null) {
+		if (branches != null && branches.size() > 0) {
 			additionalQuery = " and ub.branch_id in (";
 			int size = branches.size();
 			for (int i = 0; i < size; i++) {
@@ -1403,7 +1379,7 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 			additionalQuery += ");";
 		}
 		try {
-			String hql = "select u.id, u.username, concat(u.first_name, ' ', u.last_name) from core.users u"
+			String hql = "select u.id, u.username, concat(u.first_name, ' ', u.last_name), ub.branch_id from core.users u"
 					+ " join core.user_role ur on u.id = ur.user_id join core.user_branch ub on u.id = ub.user_id"
 					+ " where ur.role_id = :skId" + additionalQuery;
 			allSK = session.createSQLQuery(hql).setInteger("skId", SK_ID).list();
@@ -1420,9 +1396,8 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 	public List<Object[]> getSKByBranch(String branchIds) {
 		Session session = sessionFactory.openSession();
 		List<Object[]> skList = null;
-		System.out.println("branch ids: "+branchIds);
 		try {
-			String hql = "select u.id, u.username, concat(u.first_name, ' ', u.last_name) from core.users u join core.user_role ur on u.id = ur.user_id"
+			String hql = "select u.id, u.username, concat(u.first_name, ' ', u.last_name), ub.branch_id from core.users u join core.user_role ur on u.id = ur.user_id"
 					+ " join core.user_branch ub on u.id = ub.user_id where ur.role_id = :skId and ub.branch_id = any(array["+branchIds+"])";
 			skList = session.createSQLQuery(hql)
 					.setInteger("skId", SK_ID)
@@ -1769,53 +1744,32 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 
 	@Override
 	public List<Object[]> getClientInfoFilter(String startTime, String endTime, String formName, String sk, List<Object[]> allSKs, Integer pageNumber) {
-		String wh = "";
-		List<String> conds = new ArrayList<String>();
-		String stCond,edCond,formCond,skCond;
-
-
-
-		stCond = "Date(created_date) BETWEEN \'" + startTime+"\' AND \'"+endTime+"\'";
-		conds.add(stCond);
-
-
-
-		formCond = "  entity_type =\'" + formName.replaceAll(" ", "_") +"\'";
-		conds.add(formCond);
-
-		if(!sk.isEmpty()){
-			skCond = " provider_id =\'" + sk+"\'";
-			conds.add(skCond);
-		} else {
-			String providerIds = "";
-			int size = allSKs.size();
-			if (size > 0) {
-				for (int i = 0; i < size; i++) {
-					providerIds += "'"+allSKs.get(i)[1].toString()+"'";
-					if (i != size-1) providerIds += ",";
-				}
-				skCond = " provider_id = any (array["+providerIds+"])";
-				conds.add(skCond);
+		String hql = "";
+		if (formName.equalsIgnoreCase("ec family member")) {
+			if (!StringUtils.isBlank(sk)) {
+				hql = "select * from report.get_member_and_child_report_by_sk('"+startTime+"', '"+endTime+"', 'Family Member Registration', '{"+sk+"}', 10, "+ pageNumber*10+");";
+			} else {
+				hql = "select * from report.get_member_and_child_report('"+startTime+"', '"+endTime+"', 'Family Member Registration', 10, "+ pageNumber*10+");";
 			}
-		}
-		if(conds.size() == 0) wh = "";
-		else {
-			wh = " WHERE ";
-			wh += conds.get(0);
-			for(int i = 1; i < conds.size();i++){
-				wh += " AND ";
-				wh += conds.get(i);
+		} else if (formName.equalsIgnoreCase("ec child")) {
+			if (!StringUtils.isBlank(sk)) {
+				hql = "select * from report.get_member_and_child_report_by_sk('"+startTime+"', '"+endTime+"', 'Child Registration', '{"+sk+"}', 10, "+ pageNumber*10+");";
+			} else {
+				hql = "select * from report.get_member_and_child_report('"+startTime+"', '"+endTime+"', 'Child Registration', 10, "+ pageNumber*10+");";
+			}
+		} else if (formName.equalsIgnoreCase("ec family")) {
+			if (!StringUtils.isBlank(sk)) {
+				hql = "select * from report.get_household_report_by_sk('"+startTime+"', '"+endTime+"', '{"+sk+"}', 10, "+ pageNumber*10+");";
+			} else {
+				hql = "select * from report.get_household_report('"+startTime+"', '"+endTime+"', 10, "+ pageNumber*10+");";
 			}
 		}
 
+		System.out.println("::HQL::");
+		System.out.println(hql);
 		Session session = sessionFactory.openSession();
 		List<Object[]> clientInfoList = new ArrayList<Object[]>();
 		try {
-
-			String hql = "SELECT * FROM core.\"viewJsonDataConversionOfClient\"";
-					hql += wh;
-					hql += "order by id desc limit 10 offset 10 * "+ pageNumber;
-					hql += ";";
 			clientInfoList = session.createSQLQuery(hql).list();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1828,53 +1782,29 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 
 	@Override
 	public Integer getClientInfoFilterCount(String startTime, String endTime, String formName, String sk, List<Object[]> allSKs) {
-		String wh = "";
-		List<String> conds = new ArrayList<String>();
-		String stCond,edCond,formCond,skCond;
-
-
-
-		stCond = "Date(created_date) BETWEEN \'" + startTime+"\' AND \'"+endTime+"\'";
-		conds.add(stCond);
-
-
-		if(formName.contains("-1") == false){
-			formCond = "  entity_type =\'" + formName.replaceAll(" ", "_") +"\'";
-
-			conds.add(formCond);
-		}
-		if(!sk.isEmpty()){
-			skCond = " provider_id =\'" + sk+"\'";
-			conds.add(skCond);
-		} else {
-			String providerIds = "";
-			int size = allSKs.size();
-			if (size > 0) {
-				for (int i = 0; i < size; i++) {
-					providerIds += "'"+allSKs.get(i)[1].toString()+"'";
-					if (i != size-1) providerIds += ",";
-				}
-				skCond = " provider_id = any (array["+providerIds+"])";
-				conds.add(skCond);
+		String hql = "";
+		if (formName.equalsIgnoreCase("ec family member")) {
+			if (!StringUtils.isBlank(sk)) {
+				hql = "select * from report.get_member_and_child_report_by_sk_count('"+startTime+"', '"+endTime+"', 'Family Member Registration', '{"+sk+"}');";
+			} else {
+				hql = "select * from report.get_member_and_child_report_count('"+startTime+"', '"+endTime+"', 'Family Member Registration');";
+			}
+		} else if (formName.equalsIgnoreCase("ec child")) {
+			if (!StringUtils.isBlank(sk)) {
+				hql = "select * from report.get_member_and_child_report_by_sk_count('"+startTime+"', '"+endTime+"', 'Child Registration', '{"+sk+"}');";
+			} else {
+				hql = "select * from report.get_member_and_child_report_count('"+startTime+"', '"+endTime+"', 'Child Registration');";
+			}
+		} else if (formName.equalsIgnoreCase("ec family")) {
+			if (!StringUtils.isBlank(sk)) {
+				hql = "select * from report.get_household_report_by_sk_count('"+startTime+"', '"+endTime+"', '{"+sk+"}');";
+			} else {
+				hql = "select * from report.get_household_report_count('"+startTime+"', '"+endTime+"');";
 			}
 		}
-		if(conds.size() == 0) wh = "";
-		else {
-			wh = " WHERE ";
-			wh += conds.get(0);
-			for(int i = 1; i < conds.size();i++){
-				wh += " AND ";
-				wh += conds.get(i);
-			}
-		}
-
 		Session session = sessionFactory.openSession();
 		Integer clientInfoCount = 0;
 		try {
-
-			String hql = "SELECT COUNT(*) FROM core.\"viewJsonDataConversionOfClient\"";
-			hql += wh;
-			hql += ";";
 			clientInfoCount = ((BigInteger)session.createSQLQuery(hql).uniqueResult()).intValue();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1885,12 +1815,14 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 	}
 
 	@Override
-	public List<Object[]> getExportByCreator(String username) {
+	public List<Object[]> getExportByCreator(String username, String formName) {
 		Session session = sessionFactory.openSession();
 		List<Object[]> exportData = new ArrayList<Object[]>();
 		try	{
-			exportData = session.createSQLQuery("select file_name, status from export where creator = :username order by id desc limit 1")
-					.setParameter("username", username).list();
+			exportData = session.createSQLQuery("select file_name, status from export where creator = :username and form_name = :formName order by id desc limit 1")
+					.setParameter("username", username)
+					.setString("formName", formName)
+					.list();
 
 
 		}  catch (Exception e) {
@@ -2042,7 +1974,6 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 
 	@Override
 	public List<UserAssignedLocationDTO> assignedLocationByRole(Integer roleId) {
-		System.out.println("ROLE ID INSIDE:-> "+ roleId);
 		Session session = sessionFactory.openSession();
 		List<UserAssignedLocationDTO> userAssignedLocationDTOS = new ArrayList<UserAssignedLocationDTO>();
 		try {
@@ -2306,11 +2237,13 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 		String andName = (name==null || name.equalsIgnoreCase(""))?"":" and l.name ilike '%"+name+"%'";
 		try {
 			String sql = "select split_part(l.name, ':', 1) as name, split_part(l.description, ':', 1) as description, "
-					+ "lt.name locationTagName from core.location l, core.location_tag lt where lt.id = l.location_tag_id "
-					+ andName + " order by "+orderColumn+" "+orderDirection+" limit "+length+" offset "+start+";";
+					+ "l.code as code, lt.name locationTagName from core.location l, core.location_tag lt where "
+					+ "lt.id = l.location_tag_id" + andName + " order by "+orderColumn+" "+orderDirection + " "
+					+ "limit "+length+" offset "+start+";";
 			Query query = session.createSQLQuery(sql)
 					.addScalar("name", StandardBasicTypes.STRING)
 					.addScalar("description", StandardBasicTypes.STRING)
+					.addScalar("code", StandardBasicTypes.STRING)
 					.addScalar("locationTagName", StandardBasicTypes.STRING)
 					.setResultTransformer(new AliasToBeanResultTransformer(LocationDTO.class));
 			locations = query.list();
@@ -2336,6 +2269,83 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 			session.close();
 		}
 		return locationSize.get(0);
+	}
+
+	@Override
+	public <T> List<T> getCOVID19Report(String startDate, String endDate, String sql, Integer offset, Integer limit) {
+		Session session = sessionFactory.openSession();
+		List<T> report = new ArrayList<T>();
+		try {
+			Query query = session.createSQLQuery(sql)
+					.addScalar("skId", StandardBasicTypes.STRING)
+					.addScalar("ssName", StandardBasicTypes.STRING)
+					.addScalar("visitNumberToday", StandardBasicTypes.INTEGER)
+					.addScalar("numberOfSymptomsFound", StandardBasicTypes.INTEGER)
+					.addScalar("numberOfContactPersonFromAbroad", StandardBasicTypes.INTEGER)
+					.addScalar("numberOfPersonContactedWithSymptoms", StandardBasicTypes.INTEGER)
+					.addScalar("firstName", StandardBasicTypes.STRING)
+					.addScalar("contactPhone", StandardBasicTypes.STRING)
+					.addScalar("genderCode", StandardBasicTypes.STRING)
+					.addScalar("symptomsFound", StandardBasicTypes.STRING)
+					.addScalar("submittedDate", StandardBasicTypes.DATE)
+					.setString("startDate", startDate)
+					.setString("endDate", endDate)
+					.setInteger("offset", offset)
+					.setInteger("limit", limit)
+					.setResultTransformer(new AliasToBeanResultTransformer(COVID19ReportDTO.class));
+			report = query.list();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+		return report;
+	}
+
+	@Override
+	public <T> T getCOVID19ReportCount(String sql) {
+		Session session = sessionFactory.openSession();
+		List<T> report = new ArrayList<T>();
+		try {
+			Query query = session.createSQLQuery(sql).addScalar("totalRows", StandardBasicTypes.INTEGER);
+			report = query.list();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+		return report.get(0);
+	}
+
+	@Override
+	public <T> List<T> getCOVID19ReportBySK(String startDate, String endDate, String sql, Integer offset, Integer limit) {
+		Session session = sessionFactory.openSession();
+		List<T> report = new ArrayList<T>();
+		try {
+			Query query = session.createSQLQuery(sql)
+					.addScalar("skId", StandardBasicTypes.STRING)
+					.addScalar("ssName", StandardBasicTypes.STRING)
+					.addScalar("visitNumberToday", StandardBasicTypes.INTEGER)
+					.addScalar("numberOfSymptomsFound", StandardBasicTypes.INTEGER)
+					.addScalar("numberOfContactPersonFromAbroad", StandardBasicTypes.INTEGER)
+					.addScalar("numberOfPersonContactedWithSymptoms", StandardBasicTypes.INTEGER)
+					.addScalar("firstName", StandardBasicTypes.STRING)
+					.addScalar("contactPhone", StandardBasicTypes.STRING)
+					.addScalar("genderCode", StandardBasicTypes.STRING)
+					.addScalar("symptomsFound", StandardBasicTypes.STRING)
+					.addScalar("submittedDate", StandardBasicTypes.DATE)
+					.setString("startDate", startDate)
+					.setString("endDate", endDate)
+					.setInteger("offset", offset)
+					.setInteger("limit", limit)
+					.setResultTransformer(new AliasToBeanResultTransformer(COVID19ReportDTO.class));
+			report = query.list();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+		return report;
 	}
 
 	@Override
@@ -2409,6 +2419,233 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 		return report;
 	}
 
+	@Override
+	public <T> List<T> getAggregatedReport(String startDate, String endDate, String sql) {
+		Session session = sessionFactory.openSession();
+		List<T> report = new ArrayList<T>();
+		try {
+			Query query = session.createSQLQuery(sql)
+					.addScalar("locationOrProvider", StandardBasicTypes.STRING)
+					.addScalar("householdCount", StandardBasicTypes.INTEGER)
+					.addScalar("bracVo", StandardBasicTypes.INTEGER)
+					.addScalar("nvo", StandardBasicTypes.INTEGER)
+					.addScalar("householdTotal", StandardBasicTypes.INTEGER)
+					.addScalar("latrineCount", StandardBasicTypes.INTEGER)
+					.addScalar("populationCount", StandardBasicTypes.INTEGER)
+					.addScalar("from0To6", StandardBasicTypes.INTEGER)
+					.addScalar("from6to11", StandardBasicTypes.INTEGER)
+					.addScalar("from12To17", StandardBasicTypes.INTEGER)
+					.addScalar("from18To23", StandardBasicTypes.INTEGER)
+					.addScalar("from24To35", StandardBasicTypes.INTEGER)
+					.addScalar("from36To59", StandardBasicTypes.INTEGER)
+					.addScalar("from0To59", StandardBasicTypes.INTEGER)
+					.addScalar("from60To119", StandardBasicTypes.INTEGER)
+					.addScalar("from120To227Male", StandardBasicTypes.INTEGER)
+					.addScalar("from120To227Female", StandardBasicTypes.INTEGER)
+					.addScalar("from120To227Total", StandardBasicTypes.INTEGER)
+					.addScalar("from240To419Male", StandardBasicTypes.INTEGER)
+					.addScalar("from240To419Female", StandardBasicTypes.INTEGER)
+					.addScalar("from240To419Total", StandardBasicTypes.INTEGER)
+					.addScalar("from420AndPlusMale", StandardBasicTypes.INTEGER)
+					.addScalar("from420AndPlusFemale", StandardBasicTypes.INTEGER)
+					.addScalar("from420AndPlusTotal", StandardBasicTypes.INTEGER)
+					.addScalar("fingerPrintTaken", StandardBasicTypes.INTEGER)
+					.addScalar("reproductiveAgeGroup", StandardBasicTypes.INTEGER)
+					.addScalar("activeSk", StandardBasicTypes.INTEGER)
+					.addScalar("totalPopulation", StandardBasicTypes.INTEGER)
+					.setString("startDate", startDate)
+					.setString("endDate", endDate)
+					.setResultTransformer(new AliasToBeanResultTransformer(AggregatedReportDTO.class));
+			report = query.list();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+		return report;
+	}
+
+	@Override
+	public <T> List<T> getAggregatedBiometricReport(String startDate, String endDate, String sql) {
+		Session session = sessionFactory.openSession();
+		List<T> report = new ArrayList<T>();
+		try {
+			Query query = session.createSQLQuery(sql)
+					.addScalar("locationOrProvider", StandardBasicTypes.STRING)
+					.addScalar("registeredWithBio", StandardBasicTypes.INTEGER)
+					.addScalar("eligibleForRegistration", StandardBasicTypes.INTEGER)
+					.addScalar("allIdentified", StandardBasicTypes.INTEGER)
+					.addScalar("allVerified", StandardBasicTypes.INTEGER)
+					.addScalar("allBypass", StandardBasicTypes.INTEGER)
+					.addScalar("ancTotalIdentified", StandardBasicTypes.INTEGER)
+					.addScalar("ancTotalVerified", StandardBasicTypes.INTEGER)
+					.addScalar("ancTotalBypass", StandardBasicTypes.INTEGER)
+					.addScalar("pncTotalIdentified", StandardBasicTypes.INTEGER)
+					.addScalar("pncTotalVerified", StandardBasicTypes.INTEGER)
+					.addScalar("pncTotalBypass", StandardBasicTypes.INTEGER)
+					.addScalar("elcoTotalIdentified", StandardBasicTypes.INTEGER)
+					.addScalar("elcoTotalVerified", StandardBasicTypes.INTEGER)
+					.addScalar("elcoTotalBypass", StandardBasicTypes.INTEGER)
+					.addScalar("otherTotalIdentified", StandardBasicTypes.INTEGER)
+					.addScalar("otherTotalVerified", StandardBasicTypes.INTEGER)
+					.addScalar("otherTotalBypass", StandardBasicTypes.INTEGER)
+					.setString("startDate", startDate)
+					.setString("endDate", endDate)
+					.setResultTransformer(new AliasToBeanResultTransformer(AggregatedBiometricDTO.class));
+			report = query.list();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+		return report;
+	}
+
+	@Override
+	public <T> List<T> getIndividualBiometricReport(String startDate, String endDate, String sql){
+		Session session = sessionFactory.openSession();
+		List<T> report = new ArrayList<T>();
+		try {
+			Query query = session.createSQLQuery(sql)
+					.addScalar("locationOrProvider", StandardBasicTypes.STRING)
+					.addScalar("providerName", StandardBasicTypes.STRING)
+					.addScalar("serviceName", StandardBasicTypes.STRING)
+					.addScalar("eventDate", StandardBasicTypes.DATE)
+					.addScalar("identified", StandardBasicTypes.STRING)
+					.addScalar("verifiedOrBypass", StandardBasicTypes.STRING)
+					.addScalar("memberName", StandardBasicTypes.STRING)
+					.addScalar("memberId", StandardBasicTypes.STRING)
+					.addScalar("branchName", StandardBasicTypes.STRING)
+					.setResultTransformer(new AliasToBeanResultTransformer(IndividualBiometricReportDTO.class));
+			report = query.list();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+		return report;
+	}
+
+	@Override
+	public <T> List<T> getPregnancyReport(String startDate, String endDate, String sql) {
+		Session session = sessionFactory.openSession();
+		List<T> report = new ArrayList<T>();
+		try {
+			Query query = session.createSQLQuery(sql)
+					.addScalar("locationOrProvider", StandardBasicTypes.STRING)
+					.addScalar("totalPregnant", StandardBasicTypes.INTEGER)
+					.addScalar("adolescentPregnant", StandardBasicTypes.INTEGER)
+					.addScalar("firstTrimesterPregnant", StandardBasicTypes.INTEGER)
+					.addScalar("secondTrimesterPregnant", StandardBasicTypes.INTEGER)
+					.addScalar("pregnantOldAndNew", StandardBasicTypes.INTEGER)
+					.addScalar("normal", StandardBasicTypes.INTEGER)
+					.addScalar("cesarean", StandardBasicTypes.INTEGER)
+					.addScalar("bracCsba", StandardBasicTypes.INTEGER)
+					.addScalar("dnfcs", StandardBasicTypes.INTEGER)
+					.addScalar("tbaAndOthers", StandardBasicTypes.INTEGER)
+					.addScalar("totalDeliveries", StandardBasicTypes.INTEGER)
+					.addScalar("anc1To3", StandardBasicTypes.INTEGER)
+					.addScalar("anc4And4Plus", StandardBasicTypes.INTEGER)
+					.addScalar("totalAnc", StandardBasicTypes.INTEGER)
+					.addScalar("ttProtectedMothers", StandardBasicTypes.INTEGER)
+					.addScalar("pnc48SK", StandardBasicTypes.INTEGER)
+					.addScalar("pnc48Others", StandardBasicTypes.INTEGER)
+					.addScalar("completed42Days", StandardBasicTypes.INTEGER)
+					.addScalar("pnc1And2", StandardBasicTypes.INTEGER)
+					.addScalar("pnc3And3Plus", StandardBasicTypes.INTEGER)
+					.addScalar("totalPnc", StandardBasicTypes.INTEGER)
+					.addScalar("pregnancyComplicationReferred", StandardBasicTypes.INTEGER)
+					.setString("startDate", startDate)
+					.setString("endDate", endDate)
+					.setResultTransformer(new AliasToBeanResultTransformer(PregnancyReportDTO.class));
+			report = query.list();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+		return report;
+	}
+
+	@Override
+	public <T> List<T> getChildNutritionReport(String startDate, String endDate, String sql) {
+		Session session = sessionFactory.openSession();
+		List<T> report = new ArrayList<T>();
+		try {
+			Query query = session.createSQLQuery(sql)
+					.addScalar("locationOrProvider", StandardBasicTypes.STRING)
+					.addScalar("childrenVisited19To36", StandardBasicTypes.INTEGER)
+					.addScalar("immunizedChildren18To36", StandardBasicTypes.INTEGER)
+					.addScalar("ncdPackage", StandardBasicTypes.INTEGER)
+					.addScalar("adolescentPackage", StandardBasicTypes.INTEGER)
+					.addScalar("iycfPackage", StandardBasicTypes.INTEGER)
+					.addScalar("womenPackage", StandardBasicTypes.INTEGER)
+					.addScalar("breastFeedIn1Hour", StandardBasicTypes.INTEGER)
+					.addScalar("breastFeedIn24Hour", StandardBasicTypes.INTEGER)
+					.addScalar("complementaryFoodAt7Months", StandardBasicTypes.INTEGER)
+					.addScalar("pushtikonaInLast24Hour", StandardBasicTypes.INTEGER)
+					.setString("startDate", startDate)
+					.setString("endDate", endDate)
+					.setResultTransformer(new AliasToBeanResultTransformer(ChildNutritionReportDTO.class));
+			report = query.list();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+		return report;
+	}
+
+	public <T> List<T> getForumReport(String startDate, String endDate, String sql) {
+		Session session = sessionFactory.openSession();
+		List<T> report = new ArrayList<T>();
+		try {
+			Query query = session.createSQLQuery(sql)
+					.addScalar("locationOrProvider", StandardBasicTypes.STRING)
+					.addScalar("adolescentForumTarget", StandardBasicTypes.INTEGER)
+					.addScalar("adolescentForumAchievement", StandardBasicTypes.INTEGER)
+					.addScalar("womenForumTarget", StandardBasicTypes.INTEGER)
+					.addScalar("womenForumAchievement", StandardBasicTypes.INTEGER)
+					.addScalar("ncdForumTarget", StandardBasicTypes.INTEGER)
+					.addScalar("ncdForumAchievement", StandardBasicTypes.INTEGER)
+					.addScalar("childForumTarget", StandardBasicTypes.INTEGER)
+					.addScalar("childForumAchievement", StandardBasicTypes.INTEGER)
+					.addScalar("adultForumTarget", StandardBasicTypes.INTEGER)
+					.addScalar("adultForumAchievement", StandardBasicTypes.INTEGER)
+					.setString("startDate", startDate)
+					.setString("endDate", endDate)
+					.setResultTransformer(new AliasToBeanResultTransformer(ForumReportDTO.class));
+			report = query.list();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+		return report;
+	}
+
+	public <T> List<T> getForumIndividualReport(String startDate, String endDate, String sql) {
+		Session session = sessionFactory.openSession();
+		List<T> report = new ArrayList<T>();
+		try {
+			Query query = session.createSQLQuery(sql)
+					.addScalar("locationOrProvider", StandardBasicTypes.STRING)
+					.addScalar("target", StandardBasicTypes.INTEGER)
+					.addScalar("achievement", StandardBasicTypes.INTEGER)
+					.addScalar("totalParticipant", StandardBasicTypes.INTEGER)
+					.addScalar("serviceSold", StandardBasicTypes.INTEGER)
+					.setString("startDate", startDate)
+					.setString("endDate", endDate)
+					.setResultTransformer(new AliasToBeanResultTransformer(ForumIndividualReportDTO.class));
+			report = query.list();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+		return report;
+	}
+
 	public <T> List<T> getUniqueLocation(String village, String ward) {
 		List<T> locations = null;
 		Session session = sessionFactory.openSession();
@@ -2430,8 +2667,6 @@ public class DatabaseRepositoryImpl implements DatabaseRepository {
 		} finally {
 			session.close();
 		}
-
-		System.out.println("location size::-> "+ locations.size());
 
 		return locations.size()>0?locations:null;
 	}
