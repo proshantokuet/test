@@ -7,14 +7,17 @@ import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.reflect.TypeToken;
+import org.opensrp.common.dto.HrReportDTO;
 import org.opensrp.common.service.impl.DatabaseServiceImpl;
 import org.opensrp.core.dto.BranchDTO;
+import org.opensrp.core.dto.ProjectDTO;
 import org.opensrp.core.entity.Branch;
 import org.opensrp.core.entity.User;
-import org.opensrp.core.service.BranchService;
-import org.opensrp.core.service.LocationService;
-import org.opensrp.core.service.TargetService;
-import org.opensrp.core.service.UserService;
+import org.opensrp.core.service.*;
 import org.opensrp.core.service.mapper.BranchMapper;
 import org.opensrp.web.util.AuthenticationManagerUtil;
 import org.opensrp.web.util.SearchUtil;
@@ -53,6 +56,9 @@ public class BranchController {
 	
 	@Value("#{opensrp['submenu.selected.color']}")
 	private String submenuSelectedColor;
+
+	@Autowired
+	private ProjectService projectService;
 	
 	@PostAuthorize("hasPermission(returnObject, 'PERM_READ_BRANCH_LIST')")
 	@RequestMapping(value = "/branch-list.html", method = RequestMethod.GET)
@@ -71,6 +77,7 @@ public class BranchController {
 		model.addAttribute("locale", locale);
 		model.addAttribute("branch", new Branch());
 		searchUtil.setDivisionAttribute(session);
+        session.setAttribute("projects", getDataAsJson(projectService.getProjectWithByGroups()));
 		return "branch/add";
 	}
 	
@@ -78,17 +85,31 @@ public class BranchController {
 	@RequestMapping(value = "/branch/edit.html", method = RequestMethod.GET)
 	public String processUpdate(@RequestParam("id") int id, Model model, Locale locale, HttpSession session) {
 		Branch branch = branchService.findById(id, "id", Branch.class);
+		BranchDTO branchDTO = branchMapper.map(branch);
+
+		System.out.println(" ===> "+branchService.getBranchProjects(id));
 		model.addAttribute("locale", locale);
 		model.addAttribute("branch", new Branch());
-		session.setAttribute("branchDTO", branchMapper.map(branch));
+		session.setAttribute("branchDTO", branchDTO);
 		searchUtil.setDivisionAttribute(session);
 		
 		session.setAttribute("districtList",
 		    branch.getDivision() == null ? new ArrayList<>() : locationServiceImpl.getChildData(branch.getDivision()));
 		session.setAttribute("upazilaList",
 		    branch.getDistrict() == null ? new ArrayList<>() : locationServiceImpl.getChildData(branch.getDistrict()));
+		session.setAttribute("projects", getDataAsJson(projectService.getProjectWithByGroups()));
+		session.setAttribute("branchProjectList", branchService.getProjectsToJson(branchService.getBranchProjects(id)));
 		return "branch/edit";
 	}
+
+    private JsonArray getDataAsJson(List<ProjectDTO> targetList) {
+
+        Gson gson = new Gson();
+        JsonElement element = gson.toJsonTree(targetList, new TypeToken<List<ProjectDTO>>() {}.getType());
+        System.out.println(element.getAsJsonArray());
+        return element.getAsJsonArray();
+
+    }
 	
 	@RequestMapping(value = "/branches/sk", method = RequestMethod.GET)
 	public String getBranchList(HttpServletRequest request, HttpSession session, @RequestParam("branchId") Integer branchId) {

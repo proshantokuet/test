@@ -36,7 +36,10 @@ public class BranchRestController {
 		try {
 			Branch branch = branchService.findByKey(branchDTO.getCode(), "code", Branch.class);
 			if (branch == null) {
-				branchService.save(branchMapper.map(branchDTO));
+				Long branchId = branchService.save(branchMapper.map(branchDTO));
+				branch = branchService.findByKey(branchDTO.getCode(), "code", Branch.class);
+				branchService.saveBranchProjects(branchDTO.getProjects(), Long.parseLong(branch.getId()+""));
+				System.out.println("====>"+branch.getId());
 			} else {
 				msg = "Already created a branch with the same branch code.";
 			}
@@ -64,6 +67,7 @@ public class BranchRestController {
 			Branch branch = branchService.findByKey(branchDTO.getCode(), "code", Branch.class);
 			if (branch != null & branch.getId() == branchDTO.getId()) {
 				branchService.update(branchMapper.map(branchDTO));
+				branchService.updateBranchProjects(branchDTO.getProjects(), Long.parseLong(branch.getId()+""));
 			} else {
 				msg = "Already created a branch with the same branch code.";
 			}

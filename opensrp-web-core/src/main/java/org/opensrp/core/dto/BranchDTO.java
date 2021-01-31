@@ -22,6 +22,8 @@ public class BranchDTO {
 
     private Integer pkPosition;
 
+    private String[] projects;
+
     public int getId() {
         return id;
     }
@@ -100,6 +102,14 @@ public class BranchDTO {
 
     public void setPkPosition(Integer pkPosition) {
         this.pkPosition = pkPosition;
+    }
+
+    public String[] getProjects() {
+        return projects;
+    }
+
+    public void setProjects(String[] projects) {
+        this.projects = projects;
     }
 
     @Override

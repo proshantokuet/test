@@ -71,6 +71,9 @@
 				<value>org.opensrp.core.entity.WebNotificationBranch</value>
 				<value>org.opensrp.core.entity.Migration</value>
 				<value>org.opensrp.core.entity.BkashPayments</value>
+				<value>org.opensrp.core.entity.Project</value>
+				<value>org.opensrp.core.entity.ProjectGroup</value>
+				<value>org.opensrp.core.entity.BranchProjects</value>
 			</list>
 		</property>
 		<property name="hibernateProperties">

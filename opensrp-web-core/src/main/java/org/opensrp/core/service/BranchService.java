@@ -6,13 +6,19 @@ import java.util.Map;
 
 import javax.transaction.Transactional;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.reflect.TypeToken;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.transform.AliasToBeanResultTransformer;
 import org.hibernate.type.StandardBasicTypes;
 import org.opensrp.common.interfaces.DatabaseRepository;
+import org.opensrp.core.dto.ProjectDTO;
 import org.opensrp.core.entity.Branch;
+import org.opensrp.core.entity.BranchProjects;
 import org.opensrp.core.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -137,5 +143,49 @@ public class BranchService {
 		skList = session.createSQLQuery(hql).setInteger("skId", roleId).list();
 		
 		return skList;
+	}
+
+	public void saveBranchProjects(String[] projectIds, Long branchId) throws Exception {
+		List<BranchProjects> branchProjects =  new ArrayList<>();
+		for(String id: projectIds) {
+			BranchProjects branchProject = new BranchProjects();
+			branchProject.setBranchId(branchId);
+			branchProject.setProjectId(Long.parseLong(id));
+			branchProjects.add(branchProject);
+		}
+
+		repository.saveAll(branchProjects);
+	}
+
+	@Transactional
+	public void updateBranchProjects(String[] projectIds, Long branchId) throws Exception {
+		Session session = sessionFactory.getCurrentSession();
+
+		System.out.println(" i updated the branches "+ projectIds);
+		String hql = "delete from core.branch_projects where branch_id = :branchId ";
+		Query query = session.createSQLQuery(hql).setLong("branchId", branchId);
+		query.executeUpdate();
+
+		saveBranchProjects(projectIds, branchId);
+
+	}
+
+	@Transactional
+	public List<String> getBranchProjects(Integer branchId) {
+		Session session = sessionFactory.getCurrentSession();
+
+		String hql = "select project_id from core.branch_projects where branch_id = :branchId ";
+		Query query = session.createSQLQuery(hql).addScalar("project_id", StandardBasicTypes.STRING).setLong("branchId", branchId);
+
+		return query.list();
+	}
+
+	public JsonArray getProjectsToJson(List projects) {
+
+		Gson gson = new Gson();
+		JsonElement element = gson.toJsonTree(projects, new TypeToken<List<String>>() {}.getType());
+		System.out.println(element.getAsJsonArray());
+		return element.getAsJsonArray();
+
 	}
 }
