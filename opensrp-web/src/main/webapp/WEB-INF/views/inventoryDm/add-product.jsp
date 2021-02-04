@@ -8,6 +8,8 @@
 <%@ taglib prefix="security"
 		   uri="http://www.springframework.org/security/tags"%>
 <%@page import="org.opensrp.web.util.AuthenticationManagerUtil"%>
+<%@ page import="org.opensrp.core.entity.ProjectGroup" %>
+<%@ page import="java.util.List" %>
 
 <title>Add Product</title>
 	
@@ -17,7 +19,9 @@
 <jsp:include page="/WEB-INF/views/header.jsp" />
 <jsp:include page="/WEB-INF/views/dataTablecss.jsp" />
 <c:url var="back" value="/inventorydm/products-list.html" />
-
+<%
+	List<ProjectGroup> projectGroups = (List<ProjectGroup>) session.getAttribute("projectGroups");
+%>
 
 <div class="page-content-wrapper">
 		<div class="page-content">
@@ -63,6 +67,13 @@
 						</div>
 					</div>
 					<div class="form-group row">
+						<label for="productGenericName" class="col-sm-3 col-form-label"><spring:message code="lbl.productGenericName"></spring:message><span class="text-danger">*</span> :</label>
+						<div class="col-sm-6">
+							<input type="text" class="form-control" id="productGenericName" name ="productGenericName"
+								   placeholder="Generic Name" required>
+						</div>
+					</div>
+					<div class="form-group row">
 						<label for="description" class="col-sm-3 col-form-label"><spring:message code="lbl.description"></spring:message> :</label>
 						<div class="col-sm-6">
 							<input type="text" class="form-control" id="description" name ="productDescription"
@@ -98,6 +109,23 @@
 							<p>
 	                          		 <span class="text-danger" id="checkBoxSelection"></span>
 	                        	</p>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label  class="col-sm-3 col-form-label"><spring:message code="lbl.projectGroup"></spring:message><span class="text-danger">*</span> :</label>
+						<div class="col-sm-6">
+							<select class="form-control" id="projectGroupId"
+									name="division">
+								<option value="">select project group
+								</option>
+								<%
+									for (ProjectGroup pg : projectGroups) {
+								%>
+								<option value="<%= pg.getId() %>"><%=pg.getName()%></option>
+								<%
+									}
+								%>
+							</select>
 						</div>
 					</div>
 					<div class="form-group row"></div>
@@ -151,7 +179,9 @@ $("#addProduct").submit(function(event) {
 	            'sellingPrice': +$('input[name=sellingPrice]').val(),
 	            'sellTo': sellTo,
 	            'status': "ACTIVE",
-	            'type': "PRODUCT"
+	            'type': "PRODUCT",
+				'genericName': $('#productGenericName').val(),
+				'projectGroupId': $('#projectGroupId').val()
 	        };
 	console.log(formData)
 	event.preventDefault();

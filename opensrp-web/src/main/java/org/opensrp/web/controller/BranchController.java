@@ -77,7 +77,7 @@ public class BranchController {
 		model.addAttribute("locale", locale);
 		model.addAttribute("branch", new Branch());
 		searchUtil.setDivisionAttribute(session);
-        session.setAttribute("projects", getDataAsJson(projectService.getProjectWithByGroups()));
+        session.setAttribute("projects", getDataAsJson(projectService.getProjectWithGroups()));
 		return "branch/add";
 	}
 	
@@ -86,8 +86,6 @@ public class BranchController {
 	public String processUpdate(@RequestParam("id") int id, Model model, Locale locale, HttpSession session) {
 		Branch branch = branchService.findById(id, "id", Branch.class);
 		BranchDTO branchDTO = branchMapper.map(branch);
-
-		System.out.println(" ===> "+branchService.getBranchProjects(id));
 		model.addAttribute("locale", locale);
 		model.addAttribute("branch", new Branch());
 		session.setAttribute("branchDTO", branchDTO);
@@ -97,7 +95,7 @@ public class BranchController {
 		    branch.getDivision() == null ? new ArrayList<>() : locationServiceImpl.getChildData(branch.getDivision()));
 		session.setAttribute("upazilaList",
 		    branch.getDistrict() == null ? new ArrayList<>() : locationServiceImpl.getChildData(branch.getDistrict()));
-		session.setAttribute("projects", getDataAsJson(projectService.getProjectWithByGroups()));
+		session.setAttribute("projects", getDataAsJson(projectService.getProjectWithGroups()));
 		session.setAttribute("branchProjectList", branchService.getProjectsToJson(branchService.getBranchProjects(id)));
 		return "branch/edit";
 	}

@@ -33,6 +33,8 @@ public class ProductMapper {
 		product.setTimestamp(System.currentTimeMillis());
 		product.setStatus(Status.valueOf(dto.getStatus()).name());
 		product.setType(ProductType.valueOf(dto.getType()).name());
+		product.setGenericName(dto.getGenericName());
+		product.setProjectGroupId(dto.getProjectGroupId());
 		Set<Integer> productRoles = dto.getSellTo();
 		Set<ProductRole> _productRoles = new HashSet<>();
 		

@@ -66,6 +66,10 @@ public class Product implements Serializable {
 	private String type;
 	
 	private String status;
+
+	private Long projectGroupId;
+
+	private String genericName;
 	
 	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private Set<ProductRole> productRole = new HashSet<ProductRole>();
@@ -227,5 +231,20 @@ public class Product implements Serializable {
 	public void setCode(String code) {
 		this.code = code;
 	}
-	
+
+	public Long getProjectGroupId() {
+		return projectGroupId;
+	}
+
+	public void setProjectGroupId(Long projectGroupId) {
+		this.projectGroupId = projectGroupId;
+	}
+
+	public String getGenericName() {
+		return genericName;
+	}
+
+	public void setGenericName(String genericName) {
+		this.genericName = genericName;
+	}
 }

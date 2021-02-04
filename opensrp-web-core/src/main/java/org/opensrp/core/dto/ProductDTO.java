@@ -26,6 +26,10 @@ public class ProductDTO {
 	private int stock;
 	
 	private String buyers;
+
+	private String genericName;
+
+	private Long projectGroupId;
 	
 	public Long getId() {
 		return id;
@@ -105,6 +109,22 @@ public class ProductDTO {
 
 	public void setBuyers(String buyers) {
 		this.buyers = buyers;
+	}
+
+	public String getGenericName() {
+		return genericName;
+	}
+
+	public void setGenericName(String genericName) {
+		this.genericName = genericName;
+	}
+
+	public Long getProjectGroupId() {
+		return projectGroupId;
+	}
+
+	public void setProjectGroupId(Long projectGroupId) {
+		this.projectGroupId = projectGroupId;
 	}
 
 	@Override

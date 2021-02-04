@@ -8,7 +8,9 @@ import org.hibernate.transform.AliasToBeanResultTransformer;
 import org.hibernate.type.StandardBasicTypes;
 import org.opensrp.common.dto.TimestamReportDTO;
 import org.opensrp.common.interfaces.DatabaseRepository;
+import org.opensrp.core.dto.ProductDTO;
 import org.opensrp.core.dto.ProjectDTO;
+import org.opensrp.core.entity.Product;
 import org.opensrp.core.entity.Project;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -58,7 +60,7 @@ public class ProjectService extends CommonService{
     }
 
     @Transactional
-    public List<ProjectDTO> getProjectWithByGroups() {
+    public List<ProjectDTO> getProjectWithGroups() {
         Session session = getSessionFactory();
 
         String hql = "select p.*, p.project_group_id projectGroupId, pg.name projectGroupName, pg.code projectGroupCode from core.project p join core.project_group pg on pg.id = p.project_group_id" ;
@@ -71,6 +73,20 @@ public class ProjectService extends CommonService{
                 .addScalar("projectGroupId", StandardBasicTypes.LONG)
                 .addScalar("id", StandardBasicTypes.LONG)
                 .setResultTransformer(new AliasToBeanResultTransformer(ProjectDTO.class));
+        return query.list();
+    }
+
+    @Transactional
+    public List<ProductDTO> getGroupWiseProduct(Long projectGroupId) {
+        Session session = getSessionFactory();
+
+        String hql = "select * from core.product p where p.projectgroupid = "+projectGroupId ;
+        Query query = session.createSQLQuery(hql)
+                .addScalar("name", StandardBasicTypes.STRING)
+                .addScalar("genericName", StandardBasicTypes.STRING)
+                .addScalar("projectGroupId", StandardBasicTypes.LONG)
+                .addScalar("id", StandardBasicTypes.LONG)
+                .setResultTransformer(new AliasToBeanResultTransformer(ProductDTO.class));
         return query.list();
     }
 

@@ -1,9 +1,15 @@
 package org.opensrp.web.controller;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.reflect.TypeToken;
+import org.opensrp.common.dto.HrReportDTO;
 import org.opensrp.core.entity.Branch;
 import org.opensrp.core.entity.Project;
 import org.opensrp.core.entity.ProjectGroup;
 import org.opensrp.core.service.ProjectService;
+import org.opensrp.core.service.mapper.ProjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.stereotype.Controller;
@@ -21,6 +27,9 @@ public class ProjectController {
 
     @Autowired
     private ProjectService projectService;
+
+    @Autowired
+    private ProjectMapper projectMapper;
 
     @RequestMapping(value = "/project-group/list.html", method = RequestMethod.GET)
     public String projectGroupList(Model model, Locale locale, HttpSession session) {
@@ -61,4 +70,22 @@ public class ProjectController {
         session.setAttribute("projectGroups", projectService.findAll("ProjectGroup"));
         return "project/add";
     }
+
+    @RequestMapping(value = "/project/edit.html", method = RequestMethod.GET)
+    public String editProject(@RequestParam("id") Long projectId, Model model, Locale locale, HttpSession session) {
+        Project project = projectService.findById(projectId, "id", Project.class);
+        model.addAttribute("locale", locale);
+        model.addAttribute("project", new Project());
+        session.setAttribute("projectDto", projectMapper.map(project));
+        session.setAttribute("projectGroups", projectService.findAll("ProjectGroup"));
+
+        JsonElement element = new Gson().toJsonTree(
+                projectService.getGroupWiseProduct(project.getProjectGroupId()),
+                new TypeToken<List<HrReportDTO>>() {}.getType()
+        );
+        session.setAttribute("products", element);
+        return "project/edit";
+    }
+
+
 }

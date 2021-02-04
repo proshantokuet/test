@@ -74,6 +74,7 @@
 				<value>org.opensrp.core.entity.Project</value>
 				<value>org.opensrp.core.entity.ProjectGroup</value>
 				<value>org.opensrp.core.entity.BranchProjects</value>
+				<value>org.opensrp.core.entity.ProjectProduct</value>
 			</list>
 		</property>
 		<property name="hibernateProperties">

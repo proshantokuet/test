@@ -15,11 +15,7 @@ import org.opensrp.core.entity.Product;
 import org.opensrp.core.entity.ProductRole;
 import org.opensrp.core.entity.Role;
 import org.opensrp.core.entity.User;
-import org.opensrp.core.service.BranchService;
-import org.opensrp.core.service.ProductService;
-import org.opensrp.core.service.RequisitionService;
-import org.opensrp.core.service.StockService;
-import org.opensrp.core.service.TargetService;
+import org.opensrp.core.service.*;
 import org.opensrp.web.util.AuthenticationManagerUtil;
 import org.opensrp.web.util.BranchUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +46,9 @@ public class InventoryDmController {
 	
 	@Autowired
 	public BranchUtil branchUtil;
+
+	@Autowired
+	private ProjectService projectService;
 	
 	@Value("#{opensrp['submenu.selected.color']}")
 	private String submenuSelectedColor;
@@ -66,12 +65,13 @@ public class InventoryDmController {
 	}
 	
 	@RequestMapping(value = "inventorydm/add-product.html", method = RequestMethod.GET)
-	public String addProduct(Model model, Locale locale) {
+	public String addProduct(Model model, Locale locale, HttpSession session) {
 		List<Role> roles = productService.getRoleForProduct();
 		model.addAttribute("roles", roles);
 		model.addAttribute("locale", locale);
 		model.addAttribute("show", "block");
 		model.addAttribute("selectProductSubMenu", submenuSelectedColor);
+		session.setAttribute("projectGroups", projectService.findAll("ProjectGroup"));
 		return "inventoryDm/add-product";
 	}
 	
