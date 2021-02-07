@@ -18,7 +18,7 @@ public class ProjectMapper {
      */
     public Project map(ProjectDTO projectDTO) {
         Project project = new Project();
-        if (projectDTO.getId() != 0)
+        if (projectDTO.getId() != null && projectDTO.getId() != 0 )
             project.setId(projectDTO.getId());
         project.setCode(projectDTO.getCode());
         project.setName(projectDTO.getName());

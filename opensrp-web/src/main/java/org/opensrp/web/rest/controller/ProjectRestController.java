@@ -6,6 +6,7 @@ import org.opensrp.core.dto.ProjectDTO;
 import org.opensrp.core.dto.ProjectGroupDTO;
 import org.opensrp.core.dto.ProjectProductDTO;
 import org.opensrp.core.entity.Branch;
+import org.opensrp.core.entity.Project;
 import org.opensrp.core.entity.ProjectGroup;
 import org.opensrp.core.entity.ProjectProduct;
 import org.opensrp.core.service.BranchService;
@@ -43,11 +44,12 @@ public class ProjectRestController {
     public ResponseEntity<String> saveproject(@RequestBody ProjectDTO projectDTO) {
         String msg = "";
         try {
-            Branch branch = projectService.findByKey(projectDTO.getCode(), "code", Branch.class);
-            if (branch == null) {
+            Project project = projectService.findByKey(projectDTO.getCode(), "code", Project.class);
+            System.out.println(project);
+            if (project == null) {
                 projectService.saveOb(projectMapper.map(projectDTO));
             } else {
-                msg = "Already created a branch with the same project code.";
+                msg = "Already created a project with the same  code.";
             }
         }
         catch (ConstraintViolationException constEx) {
@@ -60,7 +62,7 @@ public class ProjectRestController {
             }
         }
         catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("i am here"+e.getMessage());
             msg = "Something went wrong. Please contact with the admin...";
         }
         return new ResponseEntity<>(new Gson().toJson(msg), HttpStatus.OK);
@@ -70,7 +72,7 @@ public class ProjectRestController {
     public ResponseEntity<String> saveProjectGroup(@RequestBody ProjectGroupDTO projectGroupDTO) {
         String msg = "";
         try {
-            Branch branch = projectService.findByKey(projectGroupDTO.getCode(), "code", ProjectGroup.class);
+            ProjectGroup branch = projectService.findByKey(projectGroupDTO.getCode(), "code", ProjectGroup.class);
             if (branch == null) {
                 projectService.saveOb(projectGroupMapper.map(projectGroupDTO));
             } else {
