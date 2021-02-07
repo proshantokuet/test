@@ -53,6 +53,7 @@ public class ProjectService extends CommonService{
 
         String hql = "select p.*, p.project_group_id projectGroupId from core.project p where p.project_group_id = " + projectGroupId ;
         Query query = session.createSQLQuery(hql)
+                .addScalar("id", StandardBasicTypes.LONG)
                 .addScalar("name", StandardBasicTypes.STRING)
                 .addScalar("code", StandardBasicTypes.STRING)
                 .addScalar("description", StandardBasicTypes.STRING)

@@ -65,7 +65,7 @@
                         <tr>
                             <th>Name</th>
                             <th>Code</th>
-                            <%--                            <th><spring:message code="lbl.action"/></th>--%>
+                            <th><spring:message code="lbl.action"/></th>
                         </tr>
                         </thead>
 
@@ -74,15 +74,11 @@
                             <tr>
                                 <td>${project.getName()}</td>
                                 <td>${project.getCode()}</td>
-                                    <%--                                <td>--%>
-                                    <%--                                    <% if(AuthenticationManagerUtil.isPermitted("PERM_READ_BRANCH_LIST")){ %>--%>
-                                    <%--                                    <a href="<c:url value="/branch/edit.html?lang=${locale}">--%>
-                                    <%--															 <c:param name="id" value="${branch.id}"/>--%>
-                                    <%--														 </c:url>">--%>
-                                    <%--                                        <spring:message code="lbl.edit"/>--%>
-                                    <%--                                    </a>--%>
-                                    <%--                                    <%} %>--%>
-                                    <%--                                </td>--%>
+                                <td> <a href="<c:url value="/project/edit.html?lang=${locale}">
+                                                 <c:param name="id" value="${project.getId()}"/>
+                                             </c:url>">
+                                        edit
+                                </a></td>
 
                             </tr>
                         </c:forEach>

@@ -200,6 +200,7 @@ font-size: 18px;
 	boolean MIGRATION =AuthenticationManagerUtil.isPermitted("MIGRATION");
 	boolean PERFORMANCE_CHART_AND_MAP = AuthenticationManagerUtil.isPermitted("PERFORMANCE_CHART_AND_MAP");
 	boolean DFS_REPORT = AuthenticationManagerUtil.isPermitted("DFS_REPORT");
+	boolean PERM_MANAGE_PROJECT = AuthenticationManagerUtil.isPermitted("PERM_MANAGE_PROJECT");
    %>
   
 <body>
@@ -581,9 +582,30 @@ font-size: 18px;
 					</a>
 				</li>
 				<%} %>
-				
-			
-				
+
+				<% if(PERM_MANAGE_PROJECT){ %>
+				<li>
+					<a href="javascript:;">
+						<i class="fa fa-bar-chart"></i>
+						<span class="title"><spring:message code="lbl.manageProject"/></span>
+						<span class="arrow "></span>
+					</a>
+					<ul class="sub-menu" style="display: ${report}">
+						<li style="${selectrAggregateReportSubMenu}">
+							<a href="<c:url value="/project-group/list.html?lang=${locale}"/>">
+								Project Group
+							</a>
+						</li>
+						<li style="${selectrAggregateReportSubMenu}">
+							<a href="<c:url value="/project/list.html?lang=${locale}"/>">
+								Project
+							</a>
+						</li>
+					</ul>
+				</li>
+				<% } %>
+
+
 				<% if(PERM_READ_AGGREGATED_REPORT){ %>
 				<li>
 					<a href="javascript:;">
