@@ -4,8 +4,10 @@ import com.google.gson.Gson;
 import org.opensrp.core.dto.BranchDTO;
 import org.opensrp.core.dto.ProjectDTO;
 import org.opensrp.core.dto.ProjectGroupDTO;
+import org.opensrp.core.dto.ProjectProductDTO;
 import org.opensrp.core.entity.Branch;
 import org.opensrp.core.entity.ProjectGroup;
+import org.opensrp.core.entity.ProjectProduct;
 import org.opensrp.core.service.BranchService;
 import org.opensrp.core.service.ProjectService;
 import org.opensrp.core.service.mapper.ProjectGroupMapper;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -88,6 +91,11 @@ public class ProjectRestController {
             msg = "Something went wrong. Please contact with the admin...";
         }
         return new ResponseEntity<>(new Gson().toJson(msg), HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/products/save", method = RequestMethod.POST)
+    public void saveProjectProducts(@RequestBody List<ProjectProduct> projectProduct) throws Exception {
+        projectService.saveProjectProducts(projectProduct);
     }
 
 }

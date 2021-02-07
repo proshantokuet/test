@@ -23,6 +23,8 @@
     List<ProjectGroup> projectGroups = (List<ProjectGroup>) session.getAttribute("projectGroups");
     Object products =  session.getAttribute("products");
     ProjectDTO projectDTO = (ProjectDTO) session.getAttribute("projectDto");
+    Object projectProducts = session.getAttribute("projectProducts");
+    Long projectId = projectDTO.getId();
 %>
 
 <style>
@@ -123,7 +125,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="btn" onclick="saveProducts()"> Save Products </div>
+                    <div class="btn btn-primary" onclick="saveProducts()"> Save Products </div>
                     <%-- <div class="row">
                         <div class="col-md-offset-2" style="padding-left: 15px">
                             <div id="errorMessage" style="color: red; font-size: small; display: none; margin-left: 20px; margin-top: 5px;"></div>
@@ -142,6 +144,8 @@
 
 </div>
 <script>
+
+    var projectId = <%= projectId%>;
     jQuery(document).ready(function() {
         Metronic.init(); // init metronic core components
         Layout.init(); // init current layout
@@ -201,24 +205,36 @@
 
     function appendProducts() {
         var products = <%= products %>
-
-        console.log(products);
+        var projectProducts = <%= projectProducts %>;
+        console.log(products, projectProducts);
 
         for(var i=0; i<products.length; i++) {
+
+            var price = '', code = '', checked = false;
+            for(var j=0; j<projectProducts.length; j++) {
+
+                if(projectProducts[j].productId == products[i].id) {
+                    price = projectProducts[j].price;
+                    code = projectProducts[j].productCode;
+                    checked = true;
+                }
+            }
             var codeInput = $('<input>',{
                 id : products[i].id+'code',
                 class: 'form-control',
-                value: ''
+                value: code
             });
             var priceInput = $('<input>',{
                 id : products[i].id+'price',
                 class: 'form-control',
-                value: ''
+                value: price,
+                type: 'number'
             });
             var checkInput = $('<input>',{
                 id : products[i].id+'checkbox',
                 class: 'form-control',
-                type: 'checkbox'
+                type: 'checkbox',
+                checked: checked
             });
 
             $("#products > tbody:last-child").append(
@@ -231,16 +247,62 @@
                 '</tr>'
             );
         }
+        existingProducts();
+    }
+
+    function existingProducts() {
+        console.log(" updating products ");
+
+
+        for(var i=0; i<products.length; i++) {
+            $('#' + products[i].projectId + 'code').val(products[i].productCode);
+            $('#' +products[i].projectId+'price').val(products[i].price);
+            $('#' +products[i].projectId+'checkbox').prop('checked', true);
+        }
     }
 
     function saveProducts() {
         var products = <%= products %>;
+        var projectProds = [];
         for(var i=0; i<products.length; i++) {
 
+            if($('#' +products[i].id+'checkbox').is(":checked")) {
+                projectProds.push({
+                   projectId: projectId,
+                   productId: products[i].id,
+                   price: $('#' +products[i].id+'price').val(),
+                   productCode: $('#' + products[i].id + 'code').val()
+                });
+            }
             console.log($('#' + products[i].id + 'code').val(),
                 $('#' +products[i].id+'price').val(),
                 $('#' +products[i].id+'checkbox').is(":checked"));
         }
+
+        var url = "/opensrp-dashboard/rest/api/v1/project/products/save";
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        console.log("projectProducts", projectProds);
+        $.ajax({
+            contentType : "application/json",
+            type: "POST",
+            url: url,
+            data: JSON.stringify(projectProds),
+            dataType : 'json',
+            timeout : 300000,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader(header, token);
+            },
+            success : function(data) {
+
+            },
+            error : function(e) {
+            },
+            complete : function(e) {
+                $("#loading").hide();
+                console.log("DONE");
+            }
+        });
     }
 
 

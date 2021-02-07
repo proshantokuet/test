@@ -25,6 +25,9 @@ public class ProjectProduct implements Serializable {
 
     private Double price;
 
+    @Column(name = "product_code")
+    private String productCode;
+
     public Long getId() {
         return id;
     }
@@ -55,5 +58,24 @@ public class ProjectProduct implements Serializable {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public String getProductCode() {
+        return productCode;
+    }
+
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
+    }
+
+    @Override
+    public String toString() {
+        return "ProjectProduct{" +
+                "id=" + id +
+                ", projectId=" + projectId +
+                ", productId=" + productId +
+                ", price=" + price +
+                ", productCode='" + productCode + '\'' +
+                '}';
     }
 }

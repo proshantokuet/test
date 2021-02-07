@@ -5,9 +5,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 import org.opensrp.common.dto.HrReportDTO;
+import org.opensrp.core.dto.ProductDTO;
 import org.opensrp.core.entity.Branch;
 import org.opensrp.core.entity.Project;
 import org.opensrp.core.entity.ProjectGroup;
+import org.opensrp.core.entity.ProjectProduct;
 import org.opensrp.core.service.ProjectService;
 import org.opensrp.core.service.mapper.ProjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,9 +83,15 @@ public class ProjectController {
 
         JsonElement element = new Gson().toJsonTree(
                 projectService.getGroupWiseProduct(project.getProjectGroupId()),
-                new TypeToken<List<HrReportDTO>>() {}.getType()
+                new TypeToken<List<ProductDTO>>() {}.getType()
+        );
+
+        JsonElement projectProducts = new Gson().toJsonTree(
+                projectService.getProductsByProject(project.getId()),
+                new TypeToken<List<ProjectProduct>>() {}.getType()
         );
         session.setAttribute("products", element);
+        session.setAttribute("projectProducts", projectProducts);
         return "project/edit";
     }
 

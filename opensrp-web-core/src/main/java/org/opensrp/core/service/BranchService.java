@@ -161,7 +161,6 @@ public class BranchService {
 	public void updateBranchProjects(String[] projectIds, Long branchId) throws Exception {
 		Session session = sessionFactory.getCurrentSession();
 
-		System.out.println(" i updated the branches "+ projectIds);
 		String hql = "delete from core.branch_projects where branch_id = :branchId ";
 		Query query = session.createSQLQuery(hql).setLong("branchId", branchId);
 		query.executeUpdate();
