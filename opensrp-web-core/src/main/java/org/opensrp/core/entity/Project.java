@@ -36,6 +36,9 @@ public class Project {
     @UpdateTimestamp
     private Date updated = new Date();
 
+    @Column(columnDefinition = "boolean default true")
+    private Boolean active;
+
     public Long getId() {
         return id;
     }
