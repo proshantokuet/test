@@ -132,12 +132,17 @@
 												<div class="modal-header" style="border-bottom: none;">
 										<!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
 										<h4 class="modal-title">
-											<Strong>Sell To Many</Strong>
+											<Strong>Sell To Many (SS)</Strong>
 										</h4>
+										<h4 class="text-center">
+											<Strong>${branchInfo[0][1]} - ${branchInfo[0][2]}</Strong>
+										</h4>
+										
 									</div>
 							<div id="validationSelectOne" style="display: none" class="alert alert-danger text-center" role="alert">
-											Please select one to proceed
+											<p id="restrictMessage"></p>
 										</div>
+
 										<div id="ssListBySK"></div>
 							<%-- <table class="table table-striped table-bordered record_table"
 											id="sellToManySSList">
@@ -482,6 +487,7 @@
 	let stockList;
 	let selltoMany;
 	var sellToArray = [];
+	var nogodRashidArray = [];
 	var sellStockObjectArrayPayload = [];
 	var totalSelectedAll = 0;
 	var perPersonAmountAll = 0;
@@ -535,6 +541,7 @@
 				searchPlaceholder : ""
 			}
 		});
+
 	});
 
 	function filter() {
@@ -644,7 +651,7 @@
 	            
 	         },
 	         success : function(data) {
-	             $('#loading').hide();
+	             //$('#loading').hide();
 	             $("#ssListBySK").html(data); 
 	             
 	             $('#sellToManySSList').DataTable({
@@ -656,13 +663,22 @@
 	                  rightColumns: 1 */
 	                 }
 	             });
+	             $('#sellToManySSList').on('change', 'tbody input.sub_chk', function () {
+	            	    //console.log('delegated change event'); // it is never shown
+	            	   // cb = $(this).prop('checked');
+	            	    var element = $(this).closest('tr').find('input[type="text"]');
+	                    if($(this).is(':checked'))     
+	                  		element.prop( "disabled", false );
+	                	else
+	                  	element.prop( "disabled", true );
+	            		});
 	         },
 	         error : function(e) {
-	             $('#loading').hide();
+	             //$('#loading').hide();
 	             $('#search-button').attr("disabled", false);
 	         },
 	         complete : function(e) {
-	             $('#loading').hide();
+	             //$('#loading').hide();
 	             $('#search-button').attr("disabled", false);
 	         }
 	     });
@@ -670,20 +686,37 @@
 		
 	}
 	
-$('#sellToManySSList th input:checkbox').click(
+/* $('#sellToManySSList tr input:checkbox').click(
 		function(e) {
-			$('tbody tr td input[type="checkbox"]').prop('checked',$(this).prop('checked'));
-});
+			//$('tbody tr td input[type="checkbox"]').prop('checked',$(this).prop('checked'));
+			alert("i am hit");
+}); */
+
+/* $( "#sellToManySSList" ).on( "click", "input:checkbox')", function( event ) {
+    event.preventDefault();
+    alert("i am hit");
+}); */
+
+
 
 
 
 	function proceedToChooseProduct() {
+	debugger;
 		sellToArray = [];
+		nogodRashidArray = [];
 		oTable = $('#sellToManySSList').DataTable();
 		var rowcollection =  oTable.$(".sub_chk:checked", {"page": "all"});
 		rowcollection.each(function(index, tr){
 			var ssId = +$(this).val();
 			sellToArray.push(ssId);
+			var $row = $(this).closest('tr'); //get the current row
+			var nogodRashid = $row.find('input[type="text"]').val();
+			nogodRashid = nogodRashid.trim();
+			if(nogodRashid.length > 0) {
+				nogodRashidArray.push(ssId+"-"+nogodRashid);
+			}
+			//console.log("SSID " + ssId + " nogodRashid " + nogodRashid);
 	    });
 		/* $('#sellToManySSList tbody input[type=checkbox]:checked').each(
 				function(index, tr) {
@@ -704,11 +737,18 @@ $('#sellToManySSList th input:checkbox').click(
 
 		});
 
-		if (sellToArray.length < 1) {
+		if (sellToArray.length < 1 || nogodRahsidArray.length != sellToArray.length) {
+			if(sellToArray.length < 1) {
+				$("#restrictMessage").html("Please select one to proceed");
+			}
+			if(nogodRahsidArray.length != sellToArray.length) {
+				$("#restrictMessage").html("Please Provide Nogod Roshid No.");
+			}
+			
 			$("#validationSelectOne").show();
 			$(window).scrollTop(0);
 			return;
-		} 
+		}
 		else {
 			$("#validationSelectOne").hide();
 			$("#validationOnSelectProduct").hide();

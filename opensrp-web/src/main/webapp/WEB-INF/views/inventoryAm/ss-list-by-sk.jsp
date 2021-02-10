@@ -15,10 +15,11 @@
 				<!-- <input type="checkbox"  name="select_all" value="1" id="select-all"> -->
 			</th>
 			<th><spring:message code="lbl.name"></spring:message></th>
-			<th><spring:message code="lbl.designation"></spring:message></th>
+			<%-- <th><spring:message code="lbl.designation"></spring:message></th> --%>
 			<th><spring:message code="lbl.skname"></spring:message></th>
 			<th>SK mobile</th>
-			<th><spring:message code="lbl.branchNameCode"></spring:message></th>
+			<%-- <th><spring:message code="lbl.branchNameCode"></spring:message></th> --%>
+			<th>Nogod Roshid No.<span class="text-danger">*</span></th>
 
 		</tr>
 	</thead>
@@ -29,11 +30,13 @@
 				<td><input type="checkbox" name="manuf[]" class="sub_chk"
 					id="ss${ssList.getId() }" value="${ssList.getId()}"></td>
 					<td>${ssList.getFullName() }</td>
-					<td>SS</td>
+					<!-- <td>SS</td> -->
 				
 				<td>${ssList.getSKName() }</td>
 				<td>${ssList.getUsername() }</td>
-				<td>${ssList.getBranchName() } ${ssList.getBranchCode() }</td>
+				<%-- <td>${ssList.getBranchName() } ${ssList.getBranchCode() }</td> --%>
+				<td><input type="text" class="nagadRoshid" min="1" id="nagadRoashidAmount" name="nagadRoashidAmount" disabled>
+				</td>
 			</tr>
 		</c:forEach>
 	</tbody>
