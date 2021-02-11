@@ -64,6 +64,9 @@ public class Stock implements Serializable {
 	
 	private String challan;
 	
+	@Column(name = "nogod_roshid_no")
+	private String nogodRoshidNo;
+	
 	public Long getId() {
 		return id;
 		
@@ -127,6 +130,14 @@ public class Stock implements Serializable {
 	
 	public void setChallan(String challan) {
 		this.challan = challan;
+	}
+
+	public String getNogodRoshidNo() {
+		return nogodRoshidNo;
+	}
+
+	public void setNogodRoshidNo(String nogodRoshidNo) {
+		this.nogodRoshidNo = nogodRoshidNo;
 	}
 	
 }

@@ -8,9 +8,12 @@ import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -46,6 +49,7 @@ import org.opensrp.core.entity.WebNotificationUser;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 public class StockService extends CommonService {
@@ -59,13 +63,22 @@ public class StockService extends CommonService {
 	@Transactional
 	public <T> Integer saveAll(StockDTO dto) throws Exception {
 		Session session = getSessionFactory();
-		
+		Map<Integer, String> nogodRoshidAndSsIdMap = new HashMap<Integer, String>();
 		Integer returnValue = null;
 		
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		User user = (User) auth.getPrincipal();
 		Set<StockDetailsDTO> stockDetailsDTOs = dto.getStockDetailsDTOs();
 		Set<Integer> sellTos = dto.getSellTo();
+		Set<String>nogodRashidNo = dto.getNogodRoshidsNo() == null ? new HashSet<String>() : dto.getNogodRoshidsNo();
+		if(nogodRashidNo.size() > 0) {
+			for (String nogodRoshid : nogodRashidNo) {
+				ArrayList<String> splitedString = new ArrayList<>(Arrays.asList(nogodRoshid.split("-")));
+				Integer ssId = Integer.parseInt(splitedString.get(0));
+				String roshidNo = splitedString.get(1);
+				nogodRoshidAndSsIdMap.put(ssId,roshidNo.trim());
+			}
+		}
 		int number = new Random().nextInt(999999);
 		String stockId = dto.getStockId() + String.format("%06d", number);
 		int branchId = 0;
@@ -102,6 +115,12 @@ public class StockService extends CommonService {
 				
 				refType = ReferenceType.valueOf(stockDetailsDTO.getReferenceType()).name();
 				stockDetails.setSellOrPassTo(sellTo);
+				if(nogodRoshidAndSsIdMap.size() > 0) {
+					String roshidNo = nogodRoshidAndSsIdMap.get(sellTo);
+					if(!StringUtils.isEmpty(roshidNo)) {
+						stockDetails.setNogodRoshidNo(roshidNo);
+					}
+				}
 				stockDetails.setTimestamp(System.currentTimeMillis());
 				stockDetails.setStatus(Status.valueOf(stockDetailsDTO.getStatus()).name());
 				stockDetails.setInvoiceNumber(stockDetailsDTO.getInvoiceNumber());
@@ -122,6 +141,12 @@ public class StockService extends CommonService {
 			}
 			stock.setStockDetails(_stockDetails);
 			stock.setChallan(dto.getChallan());
+			if(nogodRoshidAndSsIdMap.size() > 0) {
+				String roshidNo = nogodRoshidAndSsIdMap.get(sellTo);
+				if(!StringUtils.isEmpty(roshidNo)) {
+					stock.setNogodRoshidNo(roshidNo);
+				}
+			}
 			session.saveOrUpdate(stock);
 			if (refType.equalsIgnoreCase("PASS") && !stockDetailsDTOs.isEmpty()) {
 				WebNotification webNotification = new WebNotification();

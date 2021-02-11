@@ -109,8 +109,8 @@
 						<table class="table table-striped table-bordered "
 							id="StockSellHistory">
 							<thead>
-								<tr><th>Id</th>
-									 <%--  <th><spring:message code="lbl.serialNo"></spring:message></th> --%>
+								<tr><!-- <th>Id</th> -->
+									<th><spring:message code="lbl.serialNo"></spring:message></th>
 									<th><spring:message code="lbl.ssName"></spring:message></th>
 									<%-- <th><spring:message code="lbl.ssId"></spring:message></th> --%>
 									<th><spring:message code="lbl.skName"></spring:message></th>
@@ -670,7 +670,9 @@
 	                    if($(this).is(':checked'))     
 	                  		element.prop( "disabled", false );
 	                	else
-	                  	element.prop( "disabled", true );
+	                  		element.prop( "disabled", true );
+	                    	element.val("");
+	                    	
 	            		});
 	         },
 	         error : function(e) {
@@ -686,23 +688,7 @@
 		
 	}
 	
-/* $('#sellToManySSList tr input:checkbox').click(
-		function(e) {
-			//$('tbody tr td input[type="checkbox"]').prop('checked',$(this).prop('checked'));
-			alert("i am hit");
-}); */
-
-/* $( "#sellToManySSList" ).on( "click", "input:checkbox')", function( event ) {
-    event.preventDefault();
-    alert("i am hit");
-}); */
-
-
-
-
-
 	function proceedToChooseProduct() {
-	debugger;
 		sellToArray = [];
 		nogodRashidArray = [];
 		oTable = $('#sellToManySSList').DataTable();
@@ -716,7 +702,6 @@
 			if(nogodRashid.length > 0) {
 				nogodRashidArray.push(ssId+"-"+nogodRashid);
 			}
-			//console.log("SSID " + ssId + " nogodRashid " + nogodRashid);
 	    });
 		/* $('#sellToManySSList tbody input[type=checkbox]:checked').each(
 				function(index, tr) {
@@ -737,11 +722,11 @@
 
 		});
 
-		if (sellToArray.length < 1 || nogodRahsidArray.length != sellToArray.length) {
+		if (sellToArray.length < 1 || nogodRashidArray.length != sellToArray.length) {
 			if(sellToArray.length < 1) {
 				$("#restrictMessage").html("Please select one to proceed");
 			}
-			if(nogodRahsidArray.length != sellToArray.length) {
+			if(nogodRashidArray.length != sellToArray.length) {
 				$("#restrictMessage").html("Please Provide Nogod Roshid No.");
 			}
 			
@@ -902,11 +887,12 @@
 	
 	function sellManyTOSSSubmit() {
 		var sellToIdList = sellToArray;
+		var nogodRoshidsNo = nogodRashidArray;
 		$("#loading").show();
 		var stockListArray=sellStockObjectArrayPayload
 		var branchId = parseInt("${id}");
 		var branchCode = "${branchInfo[0][2]}";
-		var sellToId = parseInt("${ssid}");
+		//var sellToId = parseInt("${ssid}");
 		var url = "${save_url}";			
 		var token = $("meta[name='_csrf']").attr("content");
 		var header = $("meta[name='_csrf_header']").attr("content");
@@ -915,7 +901,8 @@
 		            'id': 0,
 		            "sellTo":sellToIdList,
 		            "stockId":branchCode,
-		            'stockDetailsDTOs': stockListArray
+		            'stockDetailsDTOs': stockListArray,
+		            'nogodRoshidsNo': nogodRoshidsNo
 		        };
 		console.log(formData);
 		event.preventDefault();

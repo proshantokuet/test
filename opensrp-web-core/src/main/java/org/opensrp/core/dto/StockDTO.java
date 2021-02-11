@@ -13,6 +13,8 @@ public class StockDTO {
 	
 	private Set<Integer> sellTo;
 	
+	private Set<String> nogodRoshidsNo;
+	
 	private String referenceType;
 	
 	private String stockId;
@@ -66,5 +68,16 @@ public class StockDTO {
 	public void setChallan(String challan) {
 		this.challan = challan;
 	}
+
+	public Set<String> getNogodRoshidsNo() {
+		return nogodRoshidsNo;
+	}
+
+	public void setNogodRoshidsNo(Set<String> nogodRoshidsNo) {
+		this.nogodRoshidsNo = nogodRoshidsNo;
+	}
+
+
+
 	
 }

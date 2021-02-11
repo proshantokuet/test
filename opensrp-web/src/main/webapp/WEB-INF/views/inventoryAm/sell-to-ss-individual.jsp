@@ -70,11 +70,16 @@
 								    <label for="ssName">SS:</label>
 									<input type="text" value="${ssName}" class="form-control" id="ssName" readonly>
 								</div>
-								<div class="col-lg-3 form-group">
+								<!-- <div class="col-lg-3 form-group">
 								    <label class="control-label" for="designation">Challan Number <span class="required">* </span></label>
 									<input type="text" name="challan" class="form-control"  id="challan"><p class="text-danger" id="challanNo"></p>
+								</div> -->
+								<div class="col-lg-3 form-group">
+								    <label class="control-label" for="nogodRoshidNo">Nogod Roshid No.<span class="required">* </span></label>
+									<input type="text" name="nogodRoshidNo" class="form-control"  id="nogodRoshidNo"><p class="text-danger" id="nagadRashidValidation"></p>
 								</div>
 							</div>
+							
 						</div>
 						<h3>Sell To ${ssName} </h3>
 						<br>
@@ -214,12 +219,17 @@ function saveStockData() {
 	$("#validationMessage").hide();
 	$("#validationMessage").html("");
 	var stockListArray = createStockArray();
-	var challanNumber = $("#challan").val();
+	//var challanNumber = $("#challan").val();
+	var nogodRoshidNumber = $("#nogodRoshidNo").val();
 	
-	if (challanNumber =='') { 
+/* 	if (challanNumber =='') { 
 		 $("#challanNo").html("<strong>* Required</strong>");
 		 return false;
-	}
+	} */
+ 	if (nogodRoshidNumber =='') { 
+		 $("#nagadRashidValidation").html("<strong>* Required</strong>");
+		 return false;
+	} 
 	if(stockListArray.length < 1) {
 		if ($('#validationMessage').is(':empty')) { 
 			 $("#sellAmountSelection").html("<strong>* Atleast one field need to be selected</strong>");
@@ -236,16 +246,17 @@ function saveStockData() {
 	var branchId = parseInt("${id}");
 	var branchCode = "${branchInfo[0][2]}";
 	var sellToId = parseInt("${ssid}");
+	var nogodRoshidsNo = sellToId + "-"+nogodRoshidNumber.trim();
 	var url = "${saveURL}";			
 	var token = $("meta[name='_csrf']").attr("content");
 	var header = $("meta[name='_csrf_header']").attr("content");
 	var formData;
 		formData = {
 	            'id': 0,
-	            'challan':challanNumber,
 	            "sellTo":[sellToId],
 	            "stockId":branchCode,
-	            'stockDetailsDTOs': stockListArray
+	            'stockDetailsDTOs': stockListArray,
+	            'nogodRoshidsNo': [nogodRoshidsNo]
 	        };
 	console.log(formData);
 	$(window).scrollTop(0);
